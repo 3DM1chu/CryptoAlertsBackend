@@ -1,6 +1,0 @@
-@CryptoAlertsBackend_HostAddress = http://localhost:5030
-
-GET {{CryptoAlertsBackend_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
