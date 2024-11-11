@@ -3,12 +3,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CryptoAlertsBackend.Models
 {
-    [Table("Tokens")]
-    public class Token
+    [Table("PriceRecords")]
+    public class PriceRecord
     {
         [Key]
         public int Id { get; set; }
-        public string Symbol { get; set; } = "";
-
+        public float Price { get; set; } = 0.0f;
+        public DateTime DateTime { get; set; } = DateTime.Now;
     }
 }
