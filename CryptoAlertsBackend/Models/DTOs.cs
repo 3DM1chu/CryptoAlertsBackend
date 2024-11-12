@@ -1,6 +1,5 @@
 ﻿namespace CryptoAlertsBackend.Models
 {
-    // Endpoint DTO
     public class EndpointDto
     {
         public int Id { get; set; }
@@ -9,10 +8,17 @@
         public List<AssetDto> Assets { get; set; } = [];
     }
 
-    // Asset DTO
     public class AssetDto
     {
         public int Id { get; set; }
-        public string Symbol { get; set; } = "";
+        public string Name { get; set; } = "";
+    }
+
+    public class PriceRecordCreateDto
+    {
+        public float Price { get; set; } = 0.0f;
+        public DateTime DateTime { get; set; } = DateTime.Now;
+        public string AssetName { get; set; } = "";
+        public string EndpointName { get; set; } = "";
     }
 }

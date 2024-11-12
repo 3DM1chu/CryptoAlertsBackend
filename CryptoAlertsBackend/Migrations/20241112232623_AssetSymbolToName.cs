@@ -5,24 +5,24 @@
 namespace CryptoAlertsBackend.Migrations
 {
     /// <inheritdoc />
-    public partial class Fix : Migration
+    public partial class AssetSymbolToName : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
-                name: "ID",
-                table: "Endpoints",
-                newName: "Id");
+                name: "Symbol",
+                table: "Assets",
+                newName: "Name");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
-                name: "Id",
-                table: "Endpoints",
-                newName: "ID");
+                name: "Name",
+                table: "Assets",
+                newName: "Symbol");
         }
     }
 }
