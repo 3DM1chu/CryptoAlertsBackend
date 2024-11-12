@@ -537,7 +537,7 @@ var i,
 	Expr,
 	getText,
 	isXML,
-	tokenize,
+	Tokenize,
 	compile,
 	select,
 	outermostContext,
@@ -560,7 +560,7 @@ var i,
 	dirruns = 0,
 	done = 0,
 	classCache = createCache(),
-	tokenCache = createCache(),
+	TokenCache = createCache(),
 	compilerCache = createCache(),
 	nonnativeSelectorCache = createCache(),
 	sortOrder = function( a, b ) {
@@ -599,7 +599,7 @@ var i,
 	// http://www.w3.org/TR/css3-selectors/#whitespace
 	whitespace = "[\\x20\\t\\r\\n\\f]",
 
-	// https://www.w3.org/TR/css-syntax-3/#ident-token-diagram
+	// https://www.w3.org/TR/css-syntax-3/#ident-Token-diagram
 	identifier = "(?:\\\\[\\da-fA-F]{1,6}" + whitespace +
 		"?|\\\\[^\\r\\n\\f]|[\\w-]|[^\0-\\x7f])+",
 
@@ -616,7 +616,7 @@ var i,
 
 	pseudos = ":(" + identifier + ")(?:\\((" +
 
-		// To reduce the number of selectors needing tokenize in the preFilter, prefer arguments:
+		// To reduce the number of selectors needing Tokenize in the preFilter, prefer arguments:
 		// 1. quoted (capture 3; capture 4 or capture 5)
 		"('((?:\\\\.|[^\\\\'])*)'|\"((?:\\\\.|[^\\\\\"])*)\")|" +
 
@@ -869,7 +869,7 @@ function Sizzle( selector, context, results, seed ) {
 					}
 
 					// Prefix every selector in the list
-					groups = tokenize( selector );
+					groups = Tokenize( selector );
 					i = groups.length;
 					while ( i-- ) {
 						groups[ i ] = ( nid ? "#" + nid : ":scope" ) + " " +
@@ -1840,8 +1840,8 @@ Expr = Sizzle.selectors = {
 			// Strip excess characters from unquoted arguments
 			} else if ( unquoted && rpseudo.test( unquoted ) &&
 
-				// Get excess from tokenize (recursively)
-				( excess = tokenize( unquoted, true ) ) &&
+				// Get excess from Tokenize (recursively)
+				( excess = Tokenize( unquoted, true ) ) &&
 
 				// advance to the next closing parenthesis
 				( excess = unquoted.indexOf( ")", unquoted.length - excess ) - unquoted.length ) ) {
@@ -2314,10 +2314,10 @@ function setFilters() {}
 setFilters.prototype = Expr.filters = Expr.pseudos;
 Expr.setFilters = new setFilters();
 
-tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
-	var matched, match, tokens, type,
+Tokenize = Sizzle.Tokenize = function( selector, parseOnly ) {
+	var matched, match, Tokens, type,
 		soFar, groups, preFilters,
-		cached = tokenCache[ selector + " " ];
+		cached = TokenCache[ selector + " " ];
 
 	if ( cached ) {
 		return parseOnly ? 0 : cached.slice( 0 );
@@ -2336,7 +2336,7 @@ tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
 				// Don't consume trailing commas as valid
 				soFar = soFar.slice( match[ 0 ].length ) || soFar;
 			}
-			groups.push( ( tokens = [] ) );
+			groups.push( ( Tokens = [] ) );
 		}
 
 		matched = false;
@@ -2344,7 +2344,7 @@ tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
 		// Combinators
 		if ( ( match = rcombinators.exec( soFar ) ) ) {
 			matched = match.shift();
-			tokens.push( {
+			Tokens.push( {
 				value: matched,
 
 				// Cast descendant combinators to space
@@ -2358,7 +2358,7 @@ tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
 			if ( ( match = matchExpr[ type ].exec( soFar ) ) && ( !preFilters[ type ] ||
 				( match = preFilters[ type ]( match ) ) ) ) {
 				matched = match.shift();
-				tokens.push( {
+				Tokens.push( {
 					value: matched,
 					type: type,
 					matches: match
@@ -2374,22 +2374,22 @@ tokenize = Sizzle.tokenize = function( selector, parseOnly ) {
 
 	// Return the length of the invalid excess
 	// if we're just parsing
-	// Otherwise, throw an error or return tokens
+	// Otherwise, throw an error or return Tokens
 	return parseOnly ?
 		soFar.length :
 		soFar ?
 			Sizzle.error( selector ) :
 
-			// Cache the tokens
-			tokenCache( selector, groups ).slice( 0 );
+			// Cache the Tokens
+			TokenCache( selector, groups ).slice( 0 );
 };
 
-function toSelector( tokens ) {
+function toSelector( Tokens ) {
 	var i = 0,
-		len = tokens.length,
+		len = Tokens.length,
 		selector = "";
 	for ( ; i < len; i++ ) {
-		selector += tokens[ i ].value;
+		selector += Tokens[ i ].value;
 	}
 	return selector;
 }
@@ -2605,10 +2605,10 @@ function setMatcher( preFilter, selector, matcher, postFilter, postFinder, postS
 	} );
 }
 
-function matcherFromTokens( tokens ) {
+function matcherFromTokens( Tokens ) {
 	var checkContext, matcher, j,
-		len = tokens.length,
-		leadingRelative = Expr.relative[ tokens[ 0 ].type ],
+		len = Tokens.length,
+		leadingRelative = Expr.relative[ Tokens[ 0 ].type ],
 		implicitRelative = leadingRelative || Expr.relative[ " " ],
 		i = leadingRelative ? 1 : 0,
 
@@ -2631,10 +2631,10 @@ function matcherFromTokens( tokens ) {
 		} ];
 
 	for ( ; i < len; i++ ) {
-		if ( ( matcher = Expr.relative[ tokens[ i ].type ] ) ) {
+		if ( ( matcher = Expr.relative[ Tokens[ i ].type ] ) ) {
 			matchers = [ addCombinator( elementMatcher( matchers ), matcher ) ];
 		} else {
-			matcher = Expr.filter[ tokens[ i ].type ].apply( null, tokens[ i ].matches );
+			matcher = Expr.filter[ Tokens[ i ].type ].apply( null, Tokens[ i ].matches );
 
 			// Return special upon seeing a positional matcher
 			if ( matcher[ expando ] ) {
@@ -2642,7 +2642,7 @@ function matcherFromTokens( tokens ) {
 				// Find the next relative operator (if any) for proper handling
 				j = ++i;
 				for ( ; j < len; j++ ) {
-					if ( Expr.relative[ tokens[ j ].type ] ) {
+					if ( Expr.relative[ Tokens[ j ].type ] ) {
 						break;
 					}
 				}
@@ -2650,15 +2650,15 @@ function matcherFromTokens( tokens ) {
 					i > 1 && elementMatcher( matchers ),
 					i > 1 && toSelector(
 
-					// If the preceding token was a descendant combinator, insert an implicit any-element `*`
-					tokens
+					// If the preceding Token was a descendant combinator, insert an implicit any-element `*`
+					Tokens
 						.slice( 0, i - 1 )
-						.concat( { value: tokens[ i - 2 ].type === " " ? "*" : "" } )
+						.concat( { value: Tokens[ i - 2 ].type === " " ? "*" : "" } )
 					).replace( rtrim, "$1" ),
 					matcher,
-					i < j && matcherFromTokens( tokens.slice( i, j ) ),
-					j < len && matcherFromTokens( ( tokens = tokens.slice( j ) ) ),
-					j < len && toSelector( tokens )
+					i < j && matcherFromTokens( Tokens.slice( i, j ) ),
+					j < len && matcherFromTokens( ( Tokens = Tokens.slice( j ) ) ),
+					j < len && toSelector( Tokens )
 				);
 			}
 			matchers.push( matcher );
@@ -2803,7 +2803,7 @@ compile = Sizzle.compile = function( selector, match /* Internal Use Only */ ) {
 
 		// Generate a function of recursive functions that can be used to check each element
 		if ( !match ) {
-			match = tokenize( selector );
+			match = Tokenize( selector );
 		}
 		i = match.length;
 		while ( i-- ) {
@@ -2821,7 +2821,7 @@ compile = Sizzle.compile = function( selector, match /* Internal Use Only */ ) {
 			matcherFromGroupMatchers( elementMatchers, setMatchers )
 		);
 
-		// Save selector and tokenization
+		// Save selector and Tokenization
 		cached.selector = selector;
 	}
 	return cached;
@@ -2837,9 +2837,9 @@ compile = Sizzle.compile = function( selector, match /* Internal Use Only */ ) {
  * @param {Array} [seed] A set of elements to match against
  */
 select = Sizzle.select = function( selector, context, results, seed ) {
-	var i, tokens, token, type, find,
+	var i, Tokens, Token, type, find,
 		compiled = typeof selector === "function" && selector,
-		match = !seed && tokenize( ( selector = compiled.selector || selector ) );
+		match = !seed && Tokenize( ( selector = compiled.selector || selector ) );
 
 	results = results || [];
 
@@ -2848,11 +2848,11 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 	if ( match.length === 1 ) {
 
 		// Reduce context if the leading compound selector is an ID
-		tokens = match[ 0 ] = match[ 0 ].slice( 0 );
-		if ( tokens.length > 2 && ( token = tokens[ 0 ] ).type === "ID" &&
-			context.nodeType === 9 && documentIsHTML && Expr.relative[ tokens[ 1 ].type ] ) {
+		Tokens = match[ 0 ] = match[ 0 ].slice( 0 );
+		if ( Tokens.length > 2 && ( Token = Tokens[ 0 ] ).type === "ID" &&
+			context.nodeType === 9 && documentIsHTML && Expr.relative[ Tokens[ 1 ].type ] ) {
 
-			context = ( Expr.find[ "ID" ]( token.matches[ 0 ]
+			context = ( Expr.find[ "ID" ]( Token.matches[ 0 ]
 				.replace( runescape, funescape ), context ) || [] )[ 0 ];
 			if ( !context ) {
 				return results;
@@ -2862,30 +2862,30 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 				context = context.parentNode;
 			}
 
-			selector = selector.slice( tokens.shift().value.length );
+			selector = selector.slice( Tokens.shift().value.length );
 		}
 
 		// Fetch a seed set for right-to-left matching
-		i = matchExpr[ "needsContext" ].test( selector ) ? 0 : tokens.length;
+		i = matchExpr[ "needsContext" ].test( selector ) ? 0 : Tokens.length;
 		while ( i-- ) {
-			token = tokens[ i ];
+			Token = Tokens[ i ];
 
 			// Abort if we hit a combinator
-			if ( Expr.relative[ ( type = token.type ) ] ) {
+			if ( Expr.relative[ ( type = Token.type ) ] ) {
 				break;
 			}
 			if ( ( find = Expr.find[ type ] ) ) {
 
 				// Search, expanding context for leading sibling combinators
 				if ( ( seed = find(
-					token.matches[ 0 ].replace( runescape, funescape ),
-					rsibling.test( tokens[ 0 ].type ) && testContext( context.parentNode ) ||
+					Token.matches[ 0 ].replace( runescape, funescape ),
+					rsibling.test( Tokens[ 0 ].type ) && testContext( context.parentNode ) ||
 						context
 				) ) ) {
 
-					// If seed is empty or no tokens remain, we can return early
-					tokens.splice( i, 1 );
-					selector = seed.length && toSelector( tokens );
+					// If seed is empty or no Tokens remain, we can return early
+					Tokens.splice( i, 1 );
+					selector = seed.length && toSelector( Tokens );
 					if ( !selector ) {
 						push.apply( results, seed );
 						return results;
@@ -2898,7 +2898,7 @@ select = Sizzle.select = function( selector, context, results, seed ) {
 	}
 
 	// Compile and execute a filtering function if one is not provided
-	// Provide `match` to avoid retokenization if we modified the selector above
+	// Provide `match` to avoid reTokenization if we modified the selector above
 	( compiled || compile( selector, match ) )(
 		seed,
 		context,
@@ -8252,8 +8252,8 @@ jQuery.each( [
 	// Strip and collapse whitespace according to HTML spec
 	// https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
 	function stripAndCollapse( value ) {
-		var tokens = value.match( rnothtmlwhite ) || [];
-		return tokens.join( " " );
+		var Tokens = value.match( rnothtmlwhite ) || [];
+		return Tokens.join( " " );
 	}
 
 

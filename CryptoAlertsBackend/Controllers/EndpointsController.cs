@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using CryptoAlertsBackend.Models;
+using Asset = CryptoAlertsBackend.Models.Asset;
 using Endpoint = CryptoAlertsBackend.Models.Endpoint;
 
 namespace CryptoAlertsBackend.Controllers
 {
-
     [Route("api/[controller]")]
     [ApiController]
     public class EndpointsController : ControllerBase
@@ -19,16 +19,17 @@ namespace CryptoAlertsBackend.Controllers
 
         // GET: api/Endpoints
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Endpoint>>> GetPriceRecords()
+        public async Task<ActionResult<IEnumerable<EndpointDto>>> GetPriceRecords()
         {
-            return await _context.Endpoints.ToListAsync();
+            var endpoints = await _context.Endpoints.Include(e => e.Assets).ToListAsync();
+            return endpoints.Select(DTOMapper.ToEndpointDto).ToList();
         }
 
         // GET: api/Endpoints/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Endpoint>> GetEndpoint(int id)
         {
-            var endpoint = await _context.Endpoints.FindAsync(id);
+            var endpoint = await _context.Endpoints.Include(e => e.Assets).FirstOrDefaultAsync(e => e.Id == id);
 
             if (endpoint == null)
             {
@@ -38,10 +39,10 @@ namespace CryptoAlertsBackend.Controllers
             return endpoint;
         }
 
-        // PUT: api/Endpoint/5
+        // PUT: api/Endpoints/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEndpoint(int id, Endpoint endpoint)
+        public async Task<IActionResult> PutEndpoint(int id, Asset endpoint)
         {
             if (id != endpoint.Id)
             {
@@ -69,7 +70,7 @@ namespace CryptoAlertsBackend.Controllers
             return NoContent();
         }
 
-        // POST: api/Endpoint
+        // POST: api/Endpoints
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Endpoint>> PostPriceRecord(Endpoint endpoint)
@@ -78,6 +79,29 @@ namespace CryptoAlertsBackend.Controllers
             await _context.SaveChangesAsync();
 
             return endpoint;
+        }
+
+        // POST: api/Endpoints/5/Asset
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPost("{id}/Asset")]
+        public async Task<ActionResult<Asset>> AddAssetToEndpoint(int id, Asset _Asset)
+        {
+            var endpoint = await _context.Endpoints.Include(e => e.Assets).FirstOrDefaultAsync(e => e.Id == id);
+            if (endpoint == null)
+            {
+                return NotFound();
+            }
+
+            var Asset = endpoint.Assets.FirstOrDefault(e => e.Symbol == _Asset.Symbol);
+            if (Asset == null)
+            {
+                Asset = new Asset() { Symbol = _Asset.Symbol };
+                _context.Assets.Add(Asset);
+                endpoint.Assets.Add(Asset);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok();
         }
 
         // DELETE: api/Endpoint/5
@@ -91,6 +115,28 @@ namespace CryptoAlertsBackend.Controllers
             }
 
             _context.Endpoints.Remove(endpoint);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: api/Endpoint/5/Asset
+        [HttpDelete("{id}/Asset/{Asset_symbol}")]
+        public async Task<IActionResult> DeleteEndpointAsset(int id, string Asset_symbol)
+        {
+            var endpoint = await _context.Endpoints.FindAsync(id);
+            if (endpoint == null)
+            {
+                return NotFound();
+            }
+
+            var Asset = await _context.Assets.FirstOrDefaultAsync(t => t.Symbol == Asset_symbol);
+            if (Asset == null)
+            {
+                return NotFound();
+            }
+
+            _context.Assets.Remove(Asset);
             await _context.SaveChangesAsync();
 
             return NoContent();

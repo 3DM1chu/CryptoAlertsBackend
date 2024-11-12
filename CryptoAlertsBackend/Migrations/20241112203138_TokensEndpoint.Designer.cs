@@ -4,6 +4,7 @@ using CryptoAlertsBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CryptoAlertsBackend.Migrations
 {
     [DbContext(typeof(EndpointContext))]
-    partial class EndpointContextModelSnapshot : ModelSnapshot
+    [Migration("20241112203138_TokensEndpoint")]
+    partial class TokensEndpoint
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,28 +24,6 @@ namespace CryptoAlertsBackend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("CryptoAlertsBackend.Models.Token", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("EndpointId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Symbol")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EndpointId");
-
-                    b.ToTable("Tokens");
-                });
 
             modelBuilder.Entity("CryptoAlertsBackend.Models.Endpoint", b =>
                 {
@@ -86,13 +67,31 @@ namespace CryptoAlertsBackend.Migrations
 
             modelBuilder.Entity("CryptoAlertsBackend.Models.Token", b =>
                 {
-                    b.HasOne("CryptoAlertsBackend.Models.Endpoint", "Endpoint")
-                        .WithMany("Tokens")
-                        .HasForeignKey("EndpointId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                    b.Navigation("Endpoint");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("EndpointId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Symbol")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndpointId");
+
+                    b.ToTable("Tokens");
+                });
+
+            modelBuilder.Entity("CryptoAlertsBackend.Models.Token", b =>
+                {
+                    b.HasOne("CryptoAlertsBackend.Models.Endpoint", null)
+                        .WithMany("Tokens")
+                        .HasForeignKey("EndpointId");
                 });
 
             modelBuilder.Entity("CryptoAlertsBackend.Models.Endpoint", b =>

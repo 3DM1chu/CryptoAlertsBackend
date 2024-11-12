@@ -4176,7 +4176,7 @@
       const tabClass = tip.getAttribute('class').match(basicClassPrefixRegex);
 
       if (tabClass !== null && tabClass.length > 0) {
-        tabClass.map(token => token.trim()).forEach(tClass => tip.classList.remove(tClass));
+        tabClass.map(Token => Token.trim()).forEach(tClass => tip.classList.remove(tClass));
       }
     }
 
