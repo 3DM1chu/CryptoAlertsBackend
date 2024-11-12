@@ -1,4 +1,5 @@
 using CryptoAlertsBackend.Models;
+using CryptoAlertsBackend.Workers;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,8 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+builder.Services.AddHostedService<TestBgService>();
+builder.Services.AddScoped<AssetService>();
 
 var app = builder.Build();
 app.UseCors("AllowAll");

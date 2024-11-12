@@ -92,10 +92,10 @@ namespace CryptoAlertsBackend.Controllers
                 return NotFound();
             }
 
-            var Asset = endpoint.Assets.FirstOrDefault(e => e.Symbol == _Asset.Symbol);
+            var Asset = endpoint.Assets.FirstOrDefault(e => e.Name == _Asset.Name);
             if (Asset == null)
             {
-                Asset = new Asset() { Symbol = _Asset.Symbol };
+                Asset = new Asset() { Name = _Asset.Name };
                 _context.Assets.Add(Asset);
                 endpoint.Assets.Add(Asset);
                 await _context.SaveChangesAsync();
@@ -130,7 +130,7 @@ namespace CryptoAlertsBackend.Controllers
                 return NotFound();
             }
 
-            var Asset = await _context.Assets.FirstOrDefaultAsync(t => t.Symbol == Asset_symbol);
+            var Asset = await _context.Assets.FirstOrDefaultAsync(t => t.Name == Asset_symbol);
             if (Asset == null)
             {
                 return NotFound();

@@ -75,12 +75,32 @@ namespace CryptoAlertsBackend.Controllers
         // POST: api/PriceRecords
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<PriceRecord>> PostPriceRecord(PriceRecord priceRecord)
+        public async Task<ActionResult<PriceRecordCreateDto>> PostPriceRecord(PriceRecordCreateDto priceRecord)
         {
-            _context.PriceRecords.Add(priceRecord);
+            var endpointWithAsset = await _context.Endpoints
+                .Include(end => end.Assets)
+                .Where(end => end.Assets.Any(asset => asset.Name == priceRecord.AssetName && asset.EndpointId == end.Id))
+                .Select(end => new
+                {
+                    Endpoint = end,
+                    Asset = end.Assets.FirstOrDefault(asset => asset.Name == priceRecord.AssetName)
+                })
+                .FirstOrDefaultAsync();
+
+            if (endpointWithAsset == null || endpointWithAsset.Asset == null)
+            {
+                return NotFound(priceRecord);
+            }
+
+            var endpoint = endpointWithAsset.Endpoint;
+            var asset = endpointWithAsset.Asset;
+
+            PriceRecord priceRecord1 = new PriceRecord() {Price = priceRecord.Price, DateTime = priceRecord.DateTime};
+            _context.PriceRecords.Add(priceRecord1);
+            asset.PriceRecords.Add(priceRecord1);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetPriceRecord", new { id = priceRecord.Id }, priceRecord);
+            return Ok(priceRecord);
         }
 
         // DELETE: api/PriceRecords/5

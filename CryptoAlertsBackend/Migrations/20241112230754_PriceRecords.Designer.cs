@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CryptoAlertsBackend.Migrations
 {
     [DbContext(typeof(EndpointContext))]
-    [Migration("20241112203138_TokensEndpoint")]
-    partial class TokensEndpoint
+    [Migration("20241112230754_PriceRecords")]
+    partial class PriceRecords
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,28 @@ namespace CryptoAlertsBackend.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("CryptoAlertsBackend.Models.Asset", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EndpointId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Symbol")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndpointId");
+
+                    b.ToTable("Assets");
+                });
 
             modelBuilder.Entity("CryptoAlertsBackend.Models.Endpoint", b =>
                 {
@@ -54,6 +76,9 @@ namespace CryptoAlertsBackend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AssetId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
 
@@ -62,41 +87,41 @@ namespace CryptoAlertsBackend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AssetId");
+
                     b.ToTable("PriceRecords");
                 });
 
-            modelBuilder.Entity("CryptoAlertsBackend.Models.Token", b =>
+            modelBuilder.Entity("CryptoAlertsBackend.Models.Asset", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.HasOne("CryptoAlertsBackend.Models.Endpoint", "Endpoint")
+                        .WithMany("Assets")
+                        .HasForeignKey("EndpointId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("EndpointId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Symbol")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EndpointId");
-
-                    b.ToTable("Tokens");
+                    b.Navigation("Endpoint");
                 });
 
-            modelBuilder.Entity("CryptoAlertsBackend.Models.Token", b =>
+            modelBuilder.Entity("CryptoAlertsBackend.Models.PriceRecord", b =>
                 {
-                    b.HasOne("CryptoAlertsBackend.Models.Endpoint", null)
-                        .WithMany("Tokens")
-                        .HasForeignKey("EndpointId");
+                    b.HasOne("CryptoAlertsBackend.Models.Asset", "Asset")
+                        .WithMany("PriceRecords")
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Asset");
+                });
+
+            modelBuilder.Entity("CryptoAlertsBackend.Models.Asset", b =>
+                {
+                    b.Navigation("PriceRecords");
                 });
 
             modelBuilder.Entity("CryptoAlertsBackend.Models.Endpoint", b =>
                 {
-                    b.Navigation("Tokens");
+                    b.Navigation("Assets");
                 });
 #pragma warning restore 612, 618
         }

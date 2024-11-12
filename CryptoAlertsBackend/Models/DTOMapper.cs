@@ -16,7 +16,7 @@
             return new AssetDto()
             {
                 Id = Asset.Id,
-                Symbol = Asset.Symbol
+                Name = Asset.Name
             };
         }
     }
