@@ -12,6 +12,14 @@
     {
         public int Id { get; set; }
         public string Name { get; set; } = "";
+        public List<PriceRecordDto> PriceRecords { get; set; } = [];
+    }
+
+    public class PriceRecordDto
+    {
+        public int Id { get; set; }
+        public float Price { get; set; } = 0.0f;
+        public DateTime DateTime { get; set; } = DateTime.Now;
     }
 
     public class PriceRecordCreateDto

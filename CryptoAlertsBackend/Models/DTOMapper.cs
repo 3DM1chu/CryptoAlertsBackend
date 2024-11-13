@@ -16,7 +16,15 @@
             return new AssetDto()
             {
                 Id = Asset.Id,
-                Name = Asset.Name
+                Name = Asset.Name,
+            };
+        }
+        public static PriceRecordDto ToPriceRecordDto(this PriceRecord priceRecord)
+        {
+            return new PriceRecordDto()
+            {
+                DateTime = priceRecord.DateTime,
+                Price = priceRecord.Price,
             };
         }
     }

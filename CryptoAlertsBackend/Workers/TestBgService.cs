@@ -25,7 +25,7 @@ namespace CryptoAlertsBackend.Workers
             {
                 try
                 {
-                    using var scope = _serviceScopeFactory.CreateScope();
+                   /* using var scope = _serviceScopeFactory.CreateScope();
 
                     // Resolve the DbContext and PriceService
                     var dbContext = scope.ServiceProvider.GetRequiredService<EndpointContext>();
@@ -33,7 +33,7 @@ namespace CryptoAlertsBackend.Workers
 
                     // Define parameters for the price check
                     int assetId = 1; // Example asset ID, replace as needed
-                    var timeFrame = TimeSpan.FromHours(24); // Example time frame, e.g., 24 hours
+                    var timeFrame = TimeSpan.FromMinutes(15); // Example time frame, e.g., 24 hours
                     float minPriceChangePercent = 2.0f; // Example minimum change
                     float currentPrice = 100.0f; // Example current price
 
@@ -56,7 +56,7 @@ namespace CryptoAlertsBackend.Workers
                     else
                     {
                         _logger.LogInformation("No significant price change detected.");
-                    }
+                    }*/
                 }
                 catch (Exception ex)
                 {
