@@ -1,6 +1,9 @@
 using CryptoAlertsBackend.Models;
-using CryptoAlertsBackend.Workers;
 using Microsoft.EntityFrameworkCore;
+using DotNetEnv;
+
+// Load .env file
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +22,7 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
-builder.Services.AddHostedService<TestBgService>();
+//builder.Services.AddHostedService<TestBgService>();
 builder.Services.AddScoped<AssetService>();
 
 var app = builder.Build();
