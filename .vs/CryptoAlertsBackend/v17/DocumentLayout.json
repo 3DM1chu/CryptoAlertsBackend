@@ -11,20 +11,28 @@
       "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\controllers\\assetscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\workers\\testbgservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\workers\\testbgservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\controllers\\endpointscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\controllers\\endpointscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\models\\pricerecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\models\\pricerecord.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\controllers\\pricerecordscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\controllers\\pricerecordscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\workers\\testbgservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\workers\\testbgservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\models\\asset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\models\\asset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\controllers\\endpointscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\controllers\\endpointscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\models\\dtomapper.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -33,10 +41,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\models\\dtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\models\\dtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\models\\asset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|solutionrelative:cryptoalertsbackend\\models\\asset.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9D076EB1-ECB7-46FC-BA72-D53E4740F193}|CryptoAlertsBackend\\CryptoAlertsBackend.csproj|c:\\users\\3dm\\desktop\\cryptoalertsbackend\\cryptoalertsbackend\\models\\endpoint.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -50,19 +54,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 6,
           "Children": [
             {
-              "$type": "Bookmark",
-              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
-            },
-            {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Program.cs",
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Program.cs",
@@ -75,8 +71,29 @@
               "EditorCaption": ""
             },
             {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 3,
+              "Title": "PriceRecord.cs",
+              "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Models\\PriceRecord.cs",
+              "RelativeDocumentMoniker": "CryptoAlertsBackend\\Models\\PriceRecord.cs",
+              "ToolTip": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Models\\PriceRecord.cs",
+              "RelativeToolTip": "CryptoAlertsBackend\\Models\\PriceRecord.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-11-13T23:50:27.402Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
               "Title": "Asset.cs",
               "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Models\\Asset.cs",
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Models\\Asset.cs",
@@ -95,7 +112,7 @@
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Controllers\\AssetsController.cs",
               "ToolTip": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Controllers\\AssetsController.cs",
               "RelativeToolTip": "CryptoAlertsBackend\\Controllers\\AssetsController.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAASwCMAAAA7AAAAAAAAAA==",
+              "ViewState": "AgIAABAAAAAAAAAAAADgvyQAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-13T22:25:58.289Z",
               "EditorCaption": ""
@@ -108,14 +125,14 @@
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Models\\AssetService.cs",
               "ToolTip": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Models\\AssetService.cs",
               "RelativeToolTip": "CryptoAlertsBackend\\Models\\AssetService.cs",
-              "ViewState": "AgIAADcAAAAAAAAAAAAcwD4AAAB1AAAAAAAAAA==",
+              "ViewState": "AgIAAC4AAAAAAAAAAAAcwEUAAABoAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-12T23:49:43.44Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "TestBgService.cs",
               "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Workers\\TestBgService.cs",
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Workers\\TestBgService.cs",
@@ -128,7 +145,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 9,
               "Title": "DTOs.cs",
               "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Models\\DTOs.cs",
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Models\\DTOs.cs",
@@ -141,7 +158,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 8,
               "Title": "DTOMapper.cs",
               "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Models\\DTOMapper.cs",
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Models\\DTOMapper.cs",
@@ -154,7 +171,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 7,
               "Title": "EndpointsController.cs",
               "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Controllers\\EndpointsController.cs",
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Controllers\\EndpointsController.cs",
@@ -167,7 +184,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "Endpoint.cs",
               "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Models\\Endpoint.cs",
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Models\\Endpoint.cs",
@@ -179,13 +196,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 4,
               "Title": "PriceRecordsController.cs",
               "DocumentMoniker": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Controllers\\PriceRecordsController.cs",
               "RelativeDocumentMoniker": "CryptoAlertsBackend\\Controllers\\PriceRecordsController.cs",
               "ToolTip": "C:\\Users\\3DM\\Desktop\\CryptoAlertsBackend\\CryptoAlertsBackend\\Controllers\\PriceRecordsController.cs",
               "RelativeToolTip": "CryptoAlertsBackend\\Controllers\\PriceRecordsController.cs",
-              "ViewState": "AgIAABYAAAAAAAAAAAAgwBMAAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAADUAAAAAAAAAAAAIwBMAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-12T21:44:48.025Z",
               "EditorCaption": ""
