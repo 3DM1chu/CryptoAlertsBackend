@@ -19,7 +19,7 @@ namespace CryptoAlertsBackend.Controllers
 
         // GET: api/Endpoints
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EndpointDto>>> GetPriceRecords()
+        public async Task<ActionResult<IEnumerable<EndpointDto>>> GetEndpoints()
         {
             var endpoints = await _context.Endpoints.Include(e => e.Assets).ToListAsync();
             return endpoints.Select(DTOMapper.ToEndpointDto).ToList();
@@ -42,7 +42,7 @@ namespace CryptoAlertsBackend.Controllers
         // PUT: api/Endpoints/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEndpoint(int id, Asset endpoint)
+        public async Task<IActionResult> UpdateEndpoint(int id, Asset endpoint)
         {
             if (id != endpoint.Id)
             {
@@ -73,7 +73,7 @@ namespace CryptoAlertsBackend.Controllers
         // POST: api/Endpoints
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Endpoint>> PostPriceRecord(Endpoint endpoint)
+        public async Task<ActionResult<Endpoint>> CreateEndpoint(Endpoint endpoint)
         {
             _context.Endpoints.Add(endpoint);
             await _context.SaveChangesAsync();

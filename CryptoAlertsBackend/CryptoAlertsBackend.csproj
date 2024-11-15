@@ -14,7 +14,7 @@
       <PrivateTokens>all</PrivateTokens>
       <IncludeTokens>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeTokens>
     </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
   </ItemGroup>
 
   <ItemGroup>
