@@ -4,8 +4,11 @@ namespace CryptoAlertsBackend.Models
 {
     public class AssetService(IServiceScopeFactory serviceScopeFactory)
     {
-        public async Task<float?> CheckIfPriceChangedAsync(Asset asset, PriceRecordCreateDto priceRecordCreateDto, TimeSpan timeFrame, float minPriceChangePercent)
+        // Returns lastPrice and change % and athatl
+        public async Task<(PriceRecord, float, Dictionary<string, bool>)> CheckIfPriceChangedAsync(Asset asset, PriceRecordCreateDto priceRecordCreateDto,
+            TimeSpan timeFrame, float minPriceChangePercent)
         {
+            PriceRecord lastPriceRecord = asset.PriceRecords.Last();
             PriceRecord priceRecord = new()
             {
                 DateTime = priceRecordCreateDto.DateTime,
@@ -31,7 +34,7 @@ namespace CryptoAlertsBackend.Models
                 // first price record
                 context.PriceRecords.Add(priceRecord);
                 await context.SaveChangesAsync();
-                return null;
+                return (new PriceRecord(), 0.0f, []);
             }
 
             var filteredTimeSpanPriceRecords = priceRecords.Where(pr => pr.DateTime >= targetTime).ToList();
@@ -60,19 +63,16 @@ namespace CryptoAlertsBackend.Models
             // Calculate price change percentage
             var priceChange = Math.Abs((priceRecord.Price / historicPrice * 100) - 100);
 
-            Dictionary<string, bool> athatl = checkIfPriceWasATHorATL(timeFrame, priceRecord.Price, asset.Id, context);
+            Dictionary<string, bool> athatl = CheckIfPriceWasATHorATL(timeFrame, priceRecord.Price, asset.Id, context);
 
             context.PriceRecords.Add(priceRecord);
             await context.SaveChangesAsync();
-
-
             Console.WriteLine("Price changed " + float.Parse(priceChange.ToString("0.000")).ToString());
 
-            // Optionally format the result to three decimal places
-            return float.Parse(priceChange.ToString("0.000"));
+            return (lastPriceRecord, float.Parse(priceChange.ToString("0.000")), athatl);
         }
 
-        public Dictionary<string, bool> checkIfPriceWasATHorATL(TimeSpan timeFrame, float currentPrice,
+        public Dictionary<string, bool> CheckIfPriceWasATHorATL(TimeSpan timeFrame, float currentPrice,
             int assetId, EndpointContext context)
         {
             var targetTime = DateTime.Now - timeFrame;
