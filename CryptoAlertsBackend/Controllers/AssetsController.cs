@@ -5,6 +5,10 @@ using DotNetEnv;
 using System.Text;
 using Azure.Core;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using JNogueira.Discord.Webhook.Client;
+using Polly;
+using NuGet.ContentModel;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace CryptoAlertsBackend.Controllers
@@ -73,12 +77,15 @@ namespace CryptoAlertsBackend.Controllers
 
             _ = Task.Run(async () =>
             {
-
                 foreach (var (minutes, minChange) in ChangeTimeframes)
                 {
                     (PriceRecord historyPriceRecord, float change, Dictionary<string, bool> athatl) = await assetService.CheckIfPriceChangedAsync(assetFound, priceRecordCreateDto,
                         TimeSpan.FromMinutes(minutes), (float)minChange);
                     float currentPrice = priceRecordCreateDto.Price;
+
+                    if (currentPrice == historyPriceRecord.Price || historyPriceRecord.Price == 0)
+                        continue;
+
                     string baseNotification = $"{assetFound.Name}\n{historyPriceRecord.Price} => {currentPrice}$\n{historyPriceRecord.DateTime} | {DateTime.Now}";
 
                     Notification notificationToSend = new()
@@ -94,24 +101,25 @@ namespace CryptoAlertsBackend.Controllers
 
                     if (currentPrice > historyPriceRecord.Price && athatl["wasATH"])
                     {
-                        notificationToSend.notificationText = "```" + $"\"{baseNotification}\nATH in {minutes} minutes\n📗{change}%" + "```";
+                        notificationToSend.notificationText = $"{baseNotification}\nATH in {minutes} minutes\n📗{change}%";
                     }
                     else if (currentPrice < historyPriceRecord.Price && athatl["wasATL"])
                     {
-                        notificationToSend.notificationText = "```" + $"{baseNotification}\nATL in {minutes}  minutes\n📗 {change}%" + "```";
+                        notificationToSend.notificationText = $"{baseNotification}\nATL in {minutes} minutes\n📗 {change}%";
                         notificationToSend.extra.wentUp = false;
                     }
-                    SendNotification(notificationToSend);
 
+                    SendNotification(notificationToSend);
                 }
+
+                await assetService.SavePriceRecordToDatabase(priceRecordCreateDto, assetFound.Id);
             });
             return Ok(priceRecordCreateDto);
         }
 
         private void SendNotification(Notification notification)
         {
-            string formatToAdd = "";
-            HttpClient client = new();
+            string formatToAdd;
             if (notification.notificationType == "price_change")
             {
                 if (notification.extra.wentUp)
@@ -120,33 +128,22 @@ namespace CryptoAlertsBackend.Controllers
                     formatToAdd = "\n";
 
                 string baseMessage = $"{formatToAdd}{notification.notificationText}";
-                string jsonPayload = $"{{\"content\":\"```{baseMessage}```\"}}";
 
-                // Send normal alert
-                HttpRequestMessage request = new(HttpMethod.Post, DISCORD_WEBHOOK_NORMAL_ALERT_URL)
-                {
-                    Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
-                };
-                var resp = client.Send(request);
+                var client = new DiscordWebhookClient(DISCORD_WEBHOOK_NORMAL_ALERT_URL);
+                client.SendToDiscord(new DiscordMessage($"```{baseMessage}```"));
 
                 // Check if ratio conditions are met and send accordingly
                 if (2.0 <= notification.extra.ratioIfHigherPrice && notification.extra.ratioIfHigherPrice < 3.0)
                 {
                     // Send 2X ratio alert
-                    HttpRequestMessage request2 = new(HttpMethod.Post, DISCORD_WEBHOOK_2X_RATIO_URL)
-                    {
-                        Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
-                    };
-                    client.Send(request2);
+                    client = new DiscordWebhookClient(DISCORD_WEBHOOK_2X_RATIO_URL);
+                    client.SendToDiscord(new DiscordMessage($"```{baseMessage}```"));
                 }
                 else if (notification.extra.ratioIfHigherPrice >= 3)
                 {
                     // Send 3X ratio alert
-                    HttpRequestMessage request2 = new(HttpMethod.Post, DISCORD_WEBHOOK_3X_RATIO_URL)
-                    {
-                        Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
-                    };
-                    client.Send(request2);
+                    client = new DiscordWebhookClient(DISCORD_WEBHOOK_3X_RATIO_URL);
+                    client.SendToDiscord(new DiscordMessage($"```{baseMessage}```"));
                 }
             }
             else if (notification.notificationType == "price_level")

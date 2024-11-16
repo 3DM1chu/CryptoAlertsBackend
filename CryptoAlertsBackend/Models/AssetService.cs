@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Polly;
 
 namespace CryptoAlertsBackend.Models
 {
@@ -8,13 +10,10 @@ namespace CryptoAlertsBackend.Models
         public async Task<(PriceRecord, float, Dictionary<string, bool>)> CheckIfPriceChangedAsync(Asset asset, PriceRecordCreateDto priceRecordCreateDto,
             TimeSpan timeFrame, float minPriceChangePercent)
         {
+            if(asset.PriceRecords.Count == 0)
+                return (new PriceRecord(), 0.0f, []);
+
             PriceRecord lastPriceRecord = asset.PriceRecords.Last();
-            PriceRecord priceRecord = new()
-            {
-                DateTime = priceRecordCreateDto.DateTime,
-                Price = priceRecordCreateDto.Price,
-                AssetId = asset.Id
-            };
 
             using var scope = serviceScopeFactory.CreateScope();
 
@@ -32,8 +31,6 @@ namespace CryptoAlertsBackend.Models
             if(priceRecords.Count == 0)
             {
                 // first price record
-                context.PriceRecords.Add(priceRecord);
-                await context.SaveChangesAsync();
                 return (new PriceRecord(), 0.0f, []);
             }
 
@@ -58,27 +55,22 @@ namespace CryptoAlertsBackend.Models
 
             // Extract the historical price and date
             var historicPrice = closestRecord.Price;
-            var historicDateTime = closestRecord.DateTime.AddHours(1); // Adding an hour as in the original function
+            var historicDateTime = closestRecord.DateTime; // Adding an hour as in the original function
 
             // Calculate price change percentage
-            var priceChange = Math.Abs((priceRecord.Price / historicPrice * 100) - 100);
-
-            Dictionary<string, bool> athatl = CheckIfPriceWasATHorATL(timeFrame, priceRecord.Price, asset.Id, context);
-
-            context.PriceRecords.Add(priceRecord);
-            await context.SaveChangesAsync();
-            Console.WriteLine("Price changed " + float.Parse(priceChange.ToString("0.000")).ToString());
+            var priceChange = Math.Abs((priceRecordCreateDto.Price / historicPrice * 100) - 100);
+            Dictionary<string, bool> athatl = await CheckIfPriceWasATHorATL(timeFrame, priceRecordCreateDto.Price, asset.Id, context);
 
             return (lastPriceRecord, float.Parse(priceChange.ToString("0.000")), athatl);
         }
 
-        public Dictionary<string, bool> CheckIfPriceWasATHorATL(TimeSpan timeFrame, float currentPrice,
+        public async Task<Dictionary<string, bool>> CheckIfPriceWasATHorATL(TimeSpan timeFrame, float currentPrice,
             int assetId, EndpointContext context)
         {
             var targetTime = DateTime.Now - timeFrame;
-            var allPriceRecords = context.PriceRecords
+            var allPriceRecords = await context.PriceRecords.Include(pr => pr.Asset)
                 .Where(pr => pr.AssetId == assetId && pr.DateTime >= targetTime)
-                .ToList();
+                .ToListAsync();
 
             // If no records are found, return a default response
             if (allPriceRecords.Count == 0)
@@ -99,6 +91,20 @@ namespace CryptoAlertsBackend.Models
                 { "wasATL", currentPrice < minPrice }
             };
         }
+        public async Task SavePriceRecordToDatabase(PriceRecordCreateDto priceRecordCreateDto, int assetId)
+        {
+            PriceRecord priceRecord = new()
+            {
+                DateTime = priceRecordCreateDto.DateTime,
+                Price = priceRecordCreateDto.Price,
+                AssetId = assetId
+            };
+            using var scope = serviceScopeFactory.CreateScope();
 
+            // Resolve the DbContext
+            var context = scope.ServiceProvider.GetRequiredService<EndpointContext>();
+            context.PriceRecords.Add(priceRecord);
+            await context.SaveChangesAsync();
+        }
     }
 }
