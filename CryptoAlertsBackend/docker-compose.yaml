@@ -6,17 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:80"
+      - "21379:5235"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=CryptoAlertsDb;User=sa;Password=YourStrong!Passw0rd;
-      - MINIMUM_PRICE_CHANGE_TO_ALERT_5M=3
-      - MINIMUM_PRICE_CHANGE_TO_ALERT_15M=5
-      - MINIMUM_PRICE_CHANGE_TO_ALERT_30M=6
-      - MINIMUM_PRICE_CHANGE_TO_ALERT_1H=7
-      - MINIMUM_PRICE_CHANGE_TO_ALERT_4H=10
-      - MINIMUM_PRICE_CHANGE_TO_ALERT_8H=15
-      - MINIMUM_PRICE_CHANGE_TO_ALERT_24H=20
+      - ASPNETCORE_URLS=http://+:5235
     depends_on:
       - sqlserver
 
@@ -24,7 +17,12 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver
     ports:
-      - "1433:1433"
+      - "21380:1433"
     environment:
       SA_PASSWORD: "YourStrong!Passw0rd"
       ACCEPT_EULA: "Y"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+volumes:
+  sqlserver-data:    
