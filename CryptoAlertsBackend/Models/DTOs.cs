@@ -15,6 +15,12 @@
         public List<PriceRecordDto> PriceRecords { get; set; } = [];
     }
 
+    public class AddAssetToEndpointDto
+    {
+        public string EndpointName { get; set; } = "";
+        public string AssetName { get; set; } = "";
+    }
+
     public class PriceRecordDto
     {
         public int Id { get; set; }

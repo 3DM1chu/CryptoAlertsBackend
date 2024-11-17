@@ -2,36 +2,14 @@
 using CryptoAlertsBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
-using System.Text;
-using Azure.Core;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using JNogueira.Discord.Webhook.Client;
-using Polly;
-using NuGet.ContentModel;
-using Microsoft.Extensions.DependencyInjection;
-
+using static CryptoAlertsBackend.Models.DiscordUtils;
 
 namespace CryptoAlertsBackend.Controllers
 {
-    public class Notification
-    {
-        public string notificationText { get; set; } = "";
-        public string notificationType { get; set; } = "";
-        public ExtraData extra { get; set; } = new() { ratioIfHigherPrice = 0.0, wentUp = false };
-    }
-
-    public class ExtraData
-    {
-        public double ratioIfHigherPrice { get; set; } = 0.0;
-        public bool wentUp { get; set; } = false;
-    }
-
     [Route("api/[controller]")]
     [ApiController]
-    public class AssetsController : Controller
+    public class AssetsController(EndpointContext context, AssetService assetService) : Controller
     {
-        private readonly EndpointContext _context;
-        private readonly AssetService assetService;
         private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_5M = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_5M");
         private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_15M = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_15M");
         private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_30M = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_30M");
@@ -39,10 +17,6 @@ namespace CryptoAlertsBackend.Controllers
         private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_4H = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_4H");
         private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_8H = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_8H");
         private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_24H = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_24H");
-
-        private static readonly string DISCORD_WEBHOOK_NORMAL_ALERT_URL = Env.GetString("DISCORD_WEBHOOK_NORMAL_ALERT_URL");
-        private static readonly string DISCORD_WEBHOOK_2X_RATIO_URL = Env.GetString("DISCORD_WEBHOOK_2X_RATIO_URL");
-        private static readonly string DISCORD_WEBHOOK_3X_RATIO_URL = Env.GetString("DISCORD_WEBHOOK_3X_RATIO_URL");
 
         // minutes: value_min
         private Dictionary<int, double> ChangeTimeframes = new Dictionary<int, double>()
@@ -56,106 +30,59 @@ namespace CryptoAlertsBackend.Controllers
                 {1440, MINIMUM_PRICE_CHANGE_TO_ALERT_24H}
             };
 
-        public AssetsController(EndpointContext context, AssetService assetService)
-        {
-            _context = context;
-            this.assetService = assetService;
-        }
-
         [HttpPost("addPriceRecord")]
         public async Task<IActionResult> AddPriceRecordToAsset(PriceRecordCreateDto priceRecordCreateDto)
         {
-            var assetFound = await _context.Assets
+            var assetFound = await context.Assets
                 .Where(asset => asset.Name == priceRecordCreateDto.AssetName)
                 .Include(ass => ass.PriceRecords)
                 .Include(ass => ass.Endpoint).FirstAsync();
 
-            if(assetFound == null)
-            {
+            if(assetFound is null)
                 return NotFound(priceRecordCreateDto);
-            }
 
             _ = Task.Run(async () =>
             {
                 foreach (var (minutes, minChange) in ChangeTimeframes)
                 {
-                    (PriceRecord historyPriceRecord, float change, Dictionary<string, bool> athatl) = await assetService.CheckIfPriceChangedAsync(assetFound, priceRecordCreateDto,
-                        TimeSpan.FromMinutes(minutes), (float)minChange);
+                    (PriceRecord historyPriceRecord, float change, Dictionary<string, bool> athatl)
+                    =
+                    await assetService.CheckIfPriceChangedAsync(assetFound, priceRecordCreateDto,
+                        TimeSpan.FromMinutes(minutes));
                     float currentPrice = priceRecordCreateDto.Price;
 
-                    if (currentPrice == historyPriceRecord.Price || historyPriceRecord.Price == 0)
+                    if (currentPrice == historyPriceRecord.Price || historyPriceRecord.Price == 0 || change < minChange)
                         continue;
 
                     string baseNotification = $"{assetFound.Name}\n{historyPriceRecord.Price} => {currentPrice}$\n{historyPriceRecord.DateTime} | {DateTime.Now}";
 
                     Notification notificationToSend = new()
                     {
-                        notificationText = baseNotification,
-                        notificationType = "price_change",
-                        extra = new()
+                        NotificationText = baseNotification,
+                        NotificationType = "price_change",
+                        Extra = new()
                         {
-                            ratioIfHigherPrice = (double)change / minChange,
-                            wentUp = true
+                            RatioIfHigherPrice = (double)change / minChange,
+                            WentUp = true
                         }
                     };
 
                     if (currentPrice > historyPriceRecord.Price && athatl["wasATH"])
                     {
-                        notificationToSend.notificationText = $"{baseNotification}\nATH in {minutes} minutes\n📗{change}%";
+                        notificationToSend.NotificationText = $"{baseNotification}\nATH in {minutes} minutes\n📗{change}%";
                     }
                     else if (currentPrice < historyPriceRecord.Price && athatl["wasATL"])
                     {
-                        notificationToSend.notificationText = $"{baseNotification}\nATL in {minutes} minutes\n📗 {change}%";
-                        notificationToSend.extra.wentUp = false;
+                        notificationToSend.NotificationText = $"{baseNotification}\nATL in {minutes} minutes\n📗 {change}%";
+                        notificationToSend.Extra.WentUp = false;
                     }
 
-                    SendNotification(notificationToSend);
+                    DiscordUtils.SendNotification(notificationToSend);
                 }
 
                 await assetService.SavePriceRecordToDatabase(priceRecordCreateDto, assetFound.Id);
             });
             return Ok(priceRecordCreateDto);
-        }
-
-        private void SendNotification(Notification notification)
-        {
-            string formatToAdd;
-            if (notification.notificationType == "price_change")
-            {
-                if (notification.extra.wentUp)
-                    formatToAdd = "fix\n";
-                else
-                    formatToAdd = "\n";
-
-                string baseMessage = $"{formatToAdd}{notification.notificationText}";
-
-                var client = new DiscordWebhookClient(DISCORD_WEBHOOK_NORMAL_ALERT_URL);
-                client.SendToDiscord(new DiscordMessage($"```{baseMessage}```"));
-
-                // Check if ratio conditions are met and send accordingly
-                if (2.0 <= notification.extra.ratioIfHigherPrice && notification.extra.ratioIfHigherPrice < 3.0)
-                {
-                    // Send 2X ratio alert
-                    client = new DiscordWebhookClient(DISCORD_WEBHOOK_2X_RATIO_URL);
-                    client.SendToDiscord(new DiscordMessage($"```{baseMessage}```"));
-                }
-                else if (notification.extra.ratioIfHigherPrice >= 3)
-                {
-                    // Send 3X ratio alert
-                    client = new DiscordWebhookClient(DISCORD_WEBHOOK_3X_RATIO_URL);
-                    client.SendToDiscord(new DiscordMessage($"```{baseMessage}```"));
-                }
-            }
-            else if (notification.notificationType == "price_level")
-            {
-                // TODO
-            }
-            else
-            {
-                Console.WriteLine($"Dont know type: {notification.notificationType}");
-                return;
-            }
-
         }
     }
 }

@@ -1,6 +1,7 @@
 using CryptoAlertsBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using DotNetEnv;
+using Microsoft.AspNetCore.Builder;
 
 // Load .env file
 Env.Load();

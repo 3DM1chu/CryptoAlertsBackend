@@ -1,47 +1,29 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Polly;
-
-namespace CryptoAlertsBackend.Models
+﻿namespace CryptoAlertsBackend.Models
 {
     public class AssetService(IServiceScopeFactory serviceScopeFactory)
     {
         // Returns lastPrice and change % and athatl
         public async Task<(PriceRecord, float, Dictionary<string, bool>)> CheckIfPriceChangedAsync(Asset asset, PriceRecordCreateDto priceRecordCreateDto,
-            TimeSpan timeFrame, float minPriceChangePercent)
+            TimeSpan timeFrame)
         {
             if(asset.PriceRecords.Count == 0)
                 return (new PriceRecord(), 0.0f, []);
 
             PriceRecord lastPriceRecord = asset.PriceRecords.Last();
 
-            using var scope = serviceScopeFactory.CreateScope();
-
-            // Resolve the DbContext
-            var context = scope.ServiceProvider.GetRequiredService<EndpointContext>();
-
             // Calculate target time based on the given time frame
             var targetTime = DateTime.Now - timeFrame;
 
-            var priceRecords = await context.PriceRecords
-                .Include(pr => pr.Asset)
-                .Where(pr => pr.AssetId == asset.Id)
-                .ToListAsync();
-
-            if(priceRecords.Count == 0)
-            {
-                // first price record
+            if(asset.PriceRecords.Count == 0)
                 return (new PriceRecord(), 0.0f, []);
-            }
 
-            var filteredTimeSpanPriceRecords = priceRecords.Where(pr => pr.DateTime >= targetTime).ToList();
+            var filteredTimeSpanPriceRecords = asset.PriceRecords.Where(pr => pr.DateTime >= targetTime).ToList();
             PriceRecord closestRecord;
 
             if (filteredTimeSpanPriceRecords.Count == 0)
             {
                 // If no records are found after the target time, get the closest record before targetTime
-                closestRecord = priceRecords
-                    .Where(pr => pr.DateTime <= targetTime) // Ensure you're looking only at records before or equal to targetTime
+                closestRecord = asset.PriceRecords
                     .OrderByDescending(pr => pr.DateTime)  // Get the latest record before targetTime
                     .First(); // Get the last one (most recent before targetTime)
             }
@@ -59,18 +41,17 @@ namespace CryptoAlertsBackend.Models
 
             // Calculate price change percentage
             var priceChange = Math.Abs((priceRecordCreateDto.Price / historicPrice * 100) - 100);
-            Dictionary<string, bool> athatl = await CheckIfPriceWasATHorATL(timeFrame, priceRecordCreateDto.Price, asset.Id, context);
+            Dictionary<string, bool> athatl = await CheckIfPriceWasATHorATL(timeFrame, asset, priceRecordCreateDto.Price);
 
             return (lastPriceRecord, float.Parse(priceChange.ToString("0.000")), athatl);
         }
 
-        public async Task<Dictionary<string, bool>> CheckIfPriceWasATHorATL(TimeSpan timeFrame, float currentPrice,
-            int assetId, EndpointContext context)
+        public async Task<Dictionary<string, bool>> CheckIfPriceWasATHorATL(TimeSpan timeFrame, Asset asset, float currentPrice)
         {
             var targetTime = DateTime.Now - timeFrame;
-            var allPriceRecords = await context.PriceRecords.Include(pr => pr.Asset)
-                .Where(pr => pr.AssetId == assetId && pr.DateTime >= targetTime)
-                .ToListAsync();
+            var allPriceRecords = asset.PriceRecords
+                .Where(pr => pr.DateTime >= targetTime)
+                .ToList();
 
             // If no records are found, return a default response
             if (allPriceRecords.Count == 0)

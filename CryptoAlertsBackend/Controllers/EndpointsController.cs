@@ -8,20 +8,14 @@ namespace CryptoAlertsBackend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EndpointsController : ControllerBase
+    public class EndpointsController(EndpointContext context) : ControllerBase
     {
-        private readonly EndpointContext _context;
-
-        public EndpointsController(EndpointContext context)
-        {
-            _context = context;
-        }
 
         // GET: api/Endpoints
         [HttpGet]
         public async Task<ActionResult<IEnumerable<EndpointDto>>> GetEndpoints()
         {
-            var endpoints = await _context.Endpoints.Include(e => e.Assets).ToListAsync();
+            var endpoints = await context.Endpoints.Include(e => e.Assets).ToListAsync();
             return endpoints.Select(DTOMapper.ToEndpointDto).ToList();
         }
 
@@ -29,7 +23,7 @@ namespace CryptoAlertsBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Endpoint>> GetEndpoint(int id)
         {
-            var endpoint = await _context.Endpoints.Include(e => e.Assets).FirstOrDefaultAsync(e => e.Id == id);
+            var endpoint = await context.Endpoints.Include(e => e.Assets).FirstOrDefaultAsync(e => e.Id == id);
 
             if (endpoint == null)
             {
@@ -37,37 +31,6 @@ namespace CryptoAlertsBackend.Controllers
             }
 
             return endpoint;
-        }
-
-        // PUT: api/Endpoints/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEndpoint(int id, Asset endpoint)
-        {
-            if (id != endpoint.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(endpoint).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!EndpointExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
         // POST: api/Endpoints
@@ -75,30 +38,36 @@ namespace CryptoAlertsBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<Endpoint>> CreateEndpoint(Endpoint endpoint)
         {
-            _context.Endpoints.Add(endpoint);
-            await _context.SaveChangesAsync();
+            context.Endpoints.Add(endpoint);
+            await context.SaveChangesAsync();
 
             return endpoint;
         }
 
-        // POST: api/Endpoints/5/Asset
+        // POST: api/Endpoints/AppendAsset
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost("{id}/Asset")]
-        public async Task<ActionResult<Asset>> AddAssetToEndpoint(int id, Asset _Asset)
+        [HttpPost("AppendAsset")]
+        public async Task<ActionResult<Asset>> AddAssetToEndpoint(AddAssetToEndpointDto addAssetToEndpointDto)
         {
-            var endpoint = await _context.Endpoints.Include(e => e.Assets).FirstOrDefaultAsync(e => e.Id == id);
-            if (endpoint == null)
-            {
-                return NotFound();
-            }
+            var endpoint = await context.Endpoints
+                .Include(e => e.Assets)
+                .Where(e => e.Name == addAssetToEndpointDto.EndpointName)
+                .FirstOrDefaultAsync();
 
-            var Asset = endpoint.Assets.FirstOrDefault(e => e.Name == _Asset.Name);
-            if (Asset == null)
+            if (endpoint == null)
+                return NotFound();
+
+            var asset = endpoint.Assets.FirstOrDefault(asset => asset.Name == addAssetToEndpointDto.AssetName);
+            if (asset == null)
             {
-                Asset = new Asset() { Name = _Asset.Name };
-                _context.Assets.Add(Asset);
-                endpoint.Assets.Add(Asset);
-                await _context.SaveChangesAsync();
+                asset = new Asset() { Name = addAssetToEndpointDto.AssetName };
+                context.Assets.Add(asset);
+                endpoint.Assets.Add(asset);
+                await context.SaveChangesAsync();
+            }
+            else
+            {
+                return BadRequest();
             }
 
             return Ok();
@@ -108,14 +77,14 @@ namespace CryptoAlertsBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEndpoint(int id)
         {
-            var endpoint = await _context.Endpoints.FindAsync(id);
+            var endpoint = await context.Endpoints.FindAsync(id);
             if (endpoint == null)
             {
                 return NotFound();
             }
 
-            _context.Endpoints.Remove(endpoint);
-            await _context.SaveChangesAsync();
+            context.Endpoints.Remove(endpoint);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
@@ -124,27 +93,27 @@ namespace CryptoAlertsBackend.Controllers
         [HttpDelete("{id}/Asset/{Asset_symbol}")]
         public async Task<IActionResult> DeleteEndpointAsset(int id, string Asset_symbol)
         {
-            var endpoint = await _context.Endpoints.FindAsync(id);
+            var endpoint = await context.Endpoints.FindAsync(id);
             if (endpoint == null)
             {
                 return NotFound();
             }
 
-            var Asset = await _context.Assets.FirstOrDefaultAsync(t => t.Name == Asset_symbol);
+            var Asset = await context.Assets.FirstOrDefaultAsync(t => t.Name == Asset_symbol);
             if (Asset == null)
             {
                 return NotFound();
             }
 
-            _context.Assets.Remove(Asset);
-            await _context.SaveChangesAsync();
+            context.Assets.Remove(Asset);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
 
         private bool EndpointExists(int id)
         {
-            return _context.Endpoints.Any(e => e.Id == id);
+            return context.Endpoints.Any(e => e.Id == id);
         }
     }
 }
