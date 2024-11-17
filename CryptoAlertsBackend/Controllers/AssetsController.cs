@@ -10,16 +10,16 @@ namespace CryptoAlertsBackend.Controllers
     [ApiController]
     public class AssetsController(EndpointContext context, AssetService assetService) : Controller
     {
-        private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_5M = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_5M");
-        private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_15M = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_15M");
-        private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_30M = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_30M");
-        private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_1H = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_1H");
-        private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_4H = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_4H");
-        private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_8H = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_8H");
-        private static readonly double MINIMUM_PRICE_CHANGE_TO_ALERT_24H = Env.GetDouble("MINIMUM_PRICE_CHANGE_TO_ALERT_24H");
+        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_5M = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_5M"));
+        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_15M = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_15M"));
+        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_30M = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_30M"));
+        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_1H = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_1H"));
+        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_4H = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_4H"));
+        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_8H = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_8H"));
+        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_24H = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_24H"));
 
         // minutes: value_min
-        private Dictionary<int, double> ChangeTimeframes = new Dictionary<int, double>()
+        private readonly Dictionary<int, float> ChangeTimeframes = new Dictionary<int, float>()
             {
                 {5, MINIMUM_PRICE_CHANGE_TO_ALERT_5M},
                 {15, MINIMUM_PRICE_CHANGE_TO_ALERT_15M},
@@ -33,13 +33,14 @@ namespace CryptoAlertsBackend.Controllers
         [HttpPost("addPriceRecord")]
         public async Task<IActionResult> AddPriceRecordToAsset(PriceRecordCreateDto priceRecordCreateDto)
         {
-            var assetFound = await context.Assets
+            var assetsFound = await context.Assets
                 .Where(asset => asset.Name == priceRecordCreateDto.AssetName)
-                .Include(ass => ass.PriceRecords)
-                .Include(ass => ass.Endpoint).FirstAsync();
+                .Include(ass => ass.PriceRecords).ToListAsync();
 
-            if(assetFound is null)
+            if (assetsFound is not List<Asset> { Count: > 0})
                 return NotFound(priceRecordCreateDto);
+
+            Asset assetFound = assetsFound.First();
 
             _ = Task.Run(async () =>
             {

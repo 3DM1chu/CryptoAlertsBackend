@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   webapi:
     build:
@@ -9,6 +10,13 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=CryptoAlertsDb;User=sa;Password=YourStrong!Passw0rd;
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_5M=3
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_15M=5
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_30M=6
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_1H=7
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_4H=10
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_8H=15
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_24H=20
     depends_on:
       - sqlserver
 

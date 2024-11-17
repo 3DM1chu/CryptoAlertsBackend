@@ -10,7 +10,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddDbContext<EndpointContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DevConnection"))
+    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DevConnection").Length == 0
+    ? 
+    builder.Configuration.GetConnectionString("DevConnection")
+    :
+    "Server=localhost,25557;Database=TokenManagement;User ID=sa;Password=Password_123;TrustServerCertificate=True;MultipleActiveResultSets=True")
 );
 
 builder.Services.AddControllers();
