@@ -16,6 +16,9 @@ namespace CryptoAlertsBackend.Controllers
         public async Task<ActionResult<IEnumerable<EndpointDto>>> GetEndpoints()
         {
             var endpoints = await context.Endpoints.Include(e => e.Assets).ToListAsync();
+            if (endpoints is not List<Endpoint> { Count: > 0 })
+                return NotFound();
+
             return endpoints.Select(DTOMapper.ToEndpointDto).ToList();
         }
 
@@ -23,14 +26,11 @@ namespace CryptoAlertsBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Endpoint>> GetEndpoint(int id)
         {
-            var endpoint = await context.Endpoints.Include(e => e.Assets).FirstOrDefaultAsync(e => e.Id == id);
-
-            if (endpoint == null)
-            {
+            List<Endpoint> endpoints = await context.Endpoints.Include(e => e.Assets).Where(e => e.Id == id).ToListAsync();
+            if (endpoints is not List<Endpoint> { Count: 1 })
                 return NotFound();
-            }
 
-            return endpoint;
+            return endpoints[0];
         }
 
         // POST: api/Endpoints
@@ -57,10 +57,10 @@ namespace CryptoAlertsBackend.Controllers
             if (endpoint == null)
                 return NotFound();
 
-            var asset = endpoint.Assets.FirstOrDefault(asset => asset.Name == addAssetToEndpointDto.AssetName);
-            if (asset == null)
+            var assetExisting = endpoint.Assets.Find(asset => asset.Name == addAssetToEndpointDto.AssetName);
+            if (assetExisting == null)
             {
-                asset = new Asset() { Name = addAssetToEndpointDto.AssetName };
+                Asset asset = new() { Name = addAssetToEndpointDto.AssetName };
                 context.Assets.Add(asset);
                 endpoint.Assets.Add(asset);
                 await context.SaveChangesAsync();
@@ -109,11 +109,6 @@ namespace CryptoAlertsBackend.Controllers
             await context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool EndpointExists(int id)
-        {
-            return context.Endpoints.Any(e => e.Id == id);
         }
     }
 }
