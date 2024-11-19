@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   webapi:
-    image: 3dmichu/cryptoalertsbackend
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "21379:5235"
     environment:

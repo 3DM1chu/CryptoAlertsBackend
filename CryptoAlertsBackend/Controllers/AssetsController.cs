@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CryptoAlertsBackend.Models;
 using Microsoft.EntityFrameworkCore;
-using DotNetEnv;
 using static CryptoAlertsBackend.Models.DiscordUtils;
 
 namespace CryptoAlertsBackend.Controllers
@@ -10,25 +9,40 @@ namespace CryptoAlertsBackend.Controllers
     [ApiController]
     public class AssetsController(EndpointContext context, AssetService assetService) : Controller
     {
-        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_5M = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_5M"));
-        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_15M = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_15M"));
-        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_30M = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_30M"));
-        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_1H = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_1H"));
-        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_4H = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_4H"));
-        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_8H = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_8H"));
-        private static readonly float MINIMUM_PRICE_CHANGE_TO_ALERT_24H = float.Parse(Environment.GetEnvironmentVariable("MINIMUM_PRICE_CHANGE_TO_ALERT_24H"));
+        private static readonly float? MINIMUM_PRICE_CHANGE_TO_ALERT_5M = TryParseEnvironmentVariableOrNull("MINIMUM_PRICE_CHANGE_TO_ALERT_5M");
+        private static readonly float? MINIMUM_PRICE_CHANGE_TO_ALERT_15M = TryParseEnvironmentVariableOrNull("MINIMUM_PRICE_CHANGE_TO_ALERT_15M");
+        private static readonly float? MINIMUM_PRICE_CHANGE_TO_ALERT_30M = TryParseEnvironmentVariableOrNull("MINIMUM_PRICE_CHANGE_TO_ALERT_30M");
+        private static readonly float? MINIMUM_PRICE_CHANGE_TO_ALERT_1H = TryParseEnvironmentVariableOrNull("MINIMUM_PRICE_CHANGE_TO_ALERT_1H");
+        private static readonly float? MINIMUM_PRICE_CHANGE_TO_ALERT_4H = TryParseEnvironmentVariableOrNull("MINIMUM_PRICE_CHANGE_TO_ALERT_4H");
+        private static readonly float? MINIMUM_PRICE_CHANGE_TO_ALERT_8H = TryParseEnvironmentVariableOrNull("MINIMUM_PRICE_CHANGE_TO_ALERT_8H");
+        private static readonly float? MINIMUM_PRICE_CHANGE_TO_ALERT_24H = TryParseEnvironmentVariableOrNull("MINIMUM_PRICE_CHANGE_TO_ALERT_24H");
 
         // minutes: value_min
         private readonly Dictionary<int, float> ChangeTimeframes = new Dictionary<int, float>()
             {
-                {5, MINIMUM_PRICE_CHANGE_TO_ALERT_5M},
-                {15, MINIMUM_PRICE_CHANGE_TO_ALERT_15M},
-                {30, MINIMUM_PRICE_CHANGE_TO_ALERT_30M},
-                {60, MINIMUM_PRICE_CHANGE_TO_ALERT_1H},
-                {240, MINIMUM_PRICE_CHANGE_TO_ALERT_4H},
-                {480, MINIMUM_PRICE_CHANGE_TO_ALERT_8H},
-                {1440, MINIMUM_PRICE_CHANGE_TO_ALERT_24H}
+                {5, MINIMUM_PRICE_CHANGE_TO_ALERT_5M ?? 3f},
+                {15, MINIMUM_PRICE_CHANGE_TO_ALERT_15M ?? 5f},
+                {30, MINIMUM_PRICE_CHANGE_TO_ALERT_30M ?? 6f},
+                {60, MINIMUM_PRICE_CHANGE_TO_ALERT_1H ?? 7f},
+                {240, MINIMUM_PRICE_CHANGE_TO_ALERT_4H ?? 10f},
+                {480, MINIMUM_PRICE_CHANGE_TO_ALERT_8H ?? 15f},
+                {1440, MINIMUM_PRICE_CHANGE_TO_ALERT_24H ?? 20f}
             };
+
+        private static float? TryParseEnvironmentVariableOrNull(string key)
+        {
+            string? value = Environment.GetEnvironmentVariable(key);
+            if (value == null)
+            {
+                return null;
+            }
+            if (float.TryParse(value, out var result))
+            {
+                return result;
+            }
+            return null;
+        }
+
 
         [HttpPost("addPriceRecord")]
         public async Task<IActionResult> AddPriceRecordToAsset(PriceRecordCreateDto priceRecordCreateDto)
@@ -78,7 +92,11 @@ namespace CryptoAlertsBackend.Controllers
                         notificationToSend.Extra.WentUp = false;
                     }
 
-                    DiscordUtils.SendNotification(notificationToSend);
+                    if (athatl["wasATL"] || athatl["wasATH"])
+                    {
+                        DiscordUtils.SendNotification(notificationToSend);
+                    }
+
                 }
 
                 await assetService.SavePriceRecordToDatabase(priceRecordCreateDto, assetFound.Id);

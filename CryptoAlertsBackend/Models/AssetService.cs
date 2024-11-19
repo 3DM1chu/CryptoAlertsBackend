@@ -9,8 +9,6 @@
             if(asset.PriceRecords.Count == 0)
                 return (new PriceRecord(), 0.0f, []);
 
-            PriceRecord lastPriceRecord = asset.PriceRecords.Last();
-
             // Calculate target time based on the given time frame
             var targetTime = DateTime.Now - timeFrame;
 
@@ -43,7 +41,7 @@
             var priceChange = Math.Abs((priceRecordCreateDto.Price / historicPrice * 100) - 100);
             Dictionary<string, bool> athatl = await CheckIfPriceWasATHorATL(timeFrame, asset, priceRecordCreateDto.Price);
 
-            return (lastPriceRecord, float.Parse(priceChange.ToString("0.000")), athatl);
+            return (closestRecord, float.Parse(priceChange.ToString("0.000")), athatl);
         }
 
         public async Task<Dictionary<string, bool>> CheckIfPriceWasATHorATL(TimeSpan timeFrame, Asset asset, float currentPrice)

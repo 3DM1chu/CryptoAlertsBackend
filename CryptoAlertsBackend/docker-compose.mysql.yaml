@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  webapi:
+    image: 3dmichu/cryptoalertsbackend
+    ports:
+      - "21379:5235"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5235
+      - DB_IP
+      - DB_SA_PASSWD
+      - SQL_DATABASE_NAME
+      - DAYS_TO_KEEP_HISTORY
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_5M=3
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_15M=5
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_30M=6
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_1H=7
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_4H=10
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_8H=15
+      - MINIMUM_PRICE_CHANGE_TO_ALERT_24H=20
+      - DISCORD_WEBHOOK_NORMAL_ALERT_URL
+      - DISCORD_WEBHOOK_2X_RATIO_URL
+      - DISCORD_WEBHOOK_3X_RATIO_URL
+    depends_on:
+      - sqlserver
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - "21380:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_SA_PASSWD}  # Set MySQL root password
+      MYSQL_DATABASE: "CryptoAlertsDb"            # Set your database name
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - backend
+
+volumes:
+  mysql-data:

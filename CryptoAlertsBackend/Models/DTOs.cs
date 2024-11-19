@@ -8,6 +8,11 @@
         public List<AssetDto> Assets { get; set; } = [];
     }
 
+    public class EndpointInitiateDto
+    {
+        public string Name { get; set; } = "";
+    }
+
     public class AssetDto
     {
         public int Id { get; set; }

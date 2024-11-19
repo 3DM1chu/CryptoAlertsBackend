@@ -1,5 +1,4 @@
-﻿using DotNetEnv;
-using JNogueira.Discord.Webhook.Client;
+﻿using JNogueira.Discord.Webhook.Client;
 
 namespace CryptoAlertsBackend.Models
 {
@@ -18,9 +17,9 @@ namespace CryptoAlertsBackend.Models
             public bool WentUp { get; set; } = false;
         }
 
-        private static readonly string DISCORD_WEBHOOK_NORMAL_ALERT_URL = Env.GetString("DISCORD_WEBHOOK_NORMAL_ALERT_URL");
-        private static readonly string DISCORD_WEBHOOK_2X_RATIO_URL = Env.GetString("DISCORD_WEBHOOK_2X_RATIO_URL");
-        private static readonly string DISCORD_WEBHOOK_3X_RATIO_URL = Env.GetString("DISCORD_WEBHOOK_3X_RATIO_URL");
+        private static readonly string DISCORD_WEBHOOK_NORMAL_ALERT_URL = Environment.GetEnvironmentVariable("DISCORD_WEBHOOK_NORMAL_ALERT_URL");
+        private static readonly string DISCORD_WEBHOOK_2X_RATIO_URL = Environment.GetEnvironmentVariable("DISCORD_WEBHOOK_2X_RATIO_URL");
+        private static readonly string DISCORD_WEBHOOK_3X_RATIO_URL = Environment.GetEnvironmentVariable("DISCORD_WEBHOOK_3X_RATIO_URL");
 
         public static void SendNotification(Notification notification)
         {

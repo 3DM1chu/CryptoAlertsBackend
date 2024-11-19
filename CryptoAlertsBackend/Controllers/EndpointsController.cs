@@ -73,6 +73,24 @@ namespace CryptoAlertsBackend.Controllers
             return Ok();
         }
 
+        [HttpPost("Initiate")]
+        public async Task<IActionResult> InitiateEndpointVars(EndpointInitiateDto endpointDto)
+        {
+            /*
+             * {
+             *  "url": "http://80.80.80.80:29999",
+             *  "assets": [
+             *   "BTC",
+             *   "ETH"
+             *  ]
+             * }
+             */
+            Endpoint? endpoint = await context.Endpoints.Include(endpoint => endpoint.Assets).FirstOrDefaultAsync(endp => endp.Name == endpointDto.Name);
+            if (endpoint == null) return NotFound();
+
+            return Ok(new { url = endpoint.Url, assets = endpoint.Assets.Select(asset => asset.Name) });
+        }
+
         // DELETE: api/Endpoint/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEndpoint(int id)
@@ -89,7 +107,7 @@ namespace CryptoAlertsBackend.Controllers
             return NoContent();
         }
 
-        // DELETE: api/Endpoint/5/Asset
+        // DELETE: api/Endpoint/BTCUSDT
         [HttpDelete("{id}/Asset/{Asset_symbol}")]
         public async Task<IActionResult> DeleteEndpointAsset(int id, string Asset_symbol)
         {
