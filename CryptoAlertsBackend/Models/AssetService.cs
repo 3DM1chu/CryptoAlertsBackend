@@ -5,7 +5,7 @@ namespace CryptoAlertsBackend.Models
 {
     public class AssetService(IServiceScopeFactory serviceScopeFactory)
     {
-        private static readonly SemaphoreSlim semaphore = new(16); // Limit to 4 concurrent tasks
+        private static readonly SemaphoreSlim semaphore = new(60); // Limit to 64 concurrent tasks
 
         // Returns lastPrice and change % and athatl
         public async Task<(PriceRecord, float, Dictionary<string, bool>)> CheckIfPriceChangedAsync(
