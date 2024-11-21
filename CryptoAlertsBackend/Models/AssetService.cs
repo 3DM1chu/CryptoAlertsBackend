@@ -48,7 +48,7 @@ namespace CryptoAlertsBackend.Models
                     .ToListAsync();
 
                 // Compute ATH/ATL using the fetched records
-                Dictionary<string, bool> athatl = await CheckIfPriceWasATHorATL(
+                Dictionary<string, bool> athatl = CheckIfPriceWasATHorATL(
                     timeFrame,
                     relevantRecords,
                     priceRecordCreateDto.Price);
@@ -62,7 +62,7 @@ namespace CryptoAlertsBackend.Models
         }
 
 
-        public async Task<Dictionary<string, bool>> CheckIfPriceWasATHorATL(TimeSpan timeFrame, List<float> allPriceRecords, float currentPrice)
+        public Dictionary<string, bool> CheckIfPriceWasATHorATL(TimeSpan timeFrame, List<float> allPriceRecords, float currentPrice)
         {
             float maxPrice = allPriceRecords.Max();
             float minPrice = allPriceRecords.Min();
@@ -81,8 +81,8 @@ namespace CryptoAlertsBackend.Models
                 Price = priceRecordCreateDto.Price,
                 AssetId = assetId
             };
-            using var scope = serviceScopeFactory.CreateScope();
 
+            using var scope = serviceScopeFactory.CreateScope();
             // Resolve the DbContext
             var context = scope.ServiceProvider.GetRequiredService<EndpointContext>();
             context.PriceRecords.Add(priceRecord);
