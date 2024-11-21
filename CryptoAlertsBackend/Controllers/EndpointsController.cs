@@ -126,7 +126,7 @@ namespace CryptoAlertsBackend.Controllers
             context.Assets.Remove(Asset);
             await context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok();
         }
     }
 }

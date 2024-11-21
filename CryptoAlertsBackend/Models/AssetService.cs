@@ -1,68 +1,71 @@
-﻿namespace CryptoAlertsBackend.Models
+﻿using Microsoft.EntityFrameworkCore;
+using MySql.EntityFrameworkCore.Extensions;
+
+namespace CryptoAlertsBackend.Models
 {
     public class AssetService(IServiceScopeFactory serviceScopeFactory)
     {
+        private static readonly SemaphoreSlim semaphore = new(16); // Limit to 4 concurrent tasks
+
         // Returns lastPrice and change % and athatl
-        public async Task<(PriceRecord, float, Dictionary<string, bool>)> CheckIfPriceChangedAsync(Asset asset, PriceRecordCreateDto priceRecordCreateDto,
+        public async Task<(PriceRecord, float, Dictionary<string, bool>)> CheckIfPriceChangedAsync(
+            Asset asset,
+            PriceRecordCreateDto priceRecordCreateDto,
             TimeSpan timeFrame)
         {
-            if(asset.PriceRecords.Count == 0)
-                return (new PriceRecord(), 0.0f, []);
+            await semaphore.WaitAsync();
 
-            // Calculate target time based on the given time frame
-            var targetTime = DateTime.Now - timeFrame;
-
-            if(asset.PriceRecords.Count == 0)
-                return (new PriceRecord(), 0.0f, []);
-
-            var filteredTimeSpanPriceRecords = asset.PriceRecords.Where(pr => pr.DateTime >= targetTime).ToList();
-            PriceRecord closestRecord;
-
-            if (filteredTimeSpanPriceRecords.Count == 0)
+            try
             {
-                // If no records are found after the target time, get the closest record before targetTime
-                closestRecord = asset.PriceRecords
-                    .OrderByDescending(pr => pr.DateTime)  // Get the latest record before targetTime
-                    .First(); // Get the last one (most recent before targetTime)
+                // Calculate target time based on the given time frame
+                var targetTime = DateTime.Now - timeFrame;
+
+                using var scope = serviceScopeFactory.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<EndpointContext>();
+
+                // Fetch the closest record directly from the database
+                var closestRecord = await context.PriceRecords
+                    .AsNoTracking()
+                    .Where(pr => pr.AssetId == asset.Id && pr.DateTime >= targetTime) // Filter to relevant records
+                    .OrderBy(pr => Math.Abs(EF.Functions.DateDiffSecond(targetTime, pr.DateTime))) // Sort by closest to targetTime
+                    .Select(pr => new PriceRecord { Price = pr.Price, DateTime = pr.DateTime }) // Fetch full PriceRecord
+                    .FirstOrDefaultAsync(); // Get the closest record
+
+                if (closestRecord == null)
+                    return (new PriceRecord(), 0.0f, []);
+
+                // Extract the historical price
+                var historicPrice = closestRecord.Price;
+
+                // Calculate price change percentage
+                var priceChange = Math.Abs((priceRecordCreateDto.Price / historicPrice * 100) - 100);
+
+                // Fetch relevant records for ATH/ATL check, minimizing data
+                var relevantRecords = await context.PriceRecords
+                    .AsNoTracking()
+                    .Where(pr => pr.AssetId == asset.Id && pr.DateTime >= targetTime)
+                    .Select(pr => pr.Price) // Fetch only prices
+                    .ToListAsync();
+
+                // Compute ATH/ATL using the fetched records
+                Dictionary<string, bool> athatl = await CheckIfPriceWasATHorATL(
+                    timeFrame,
+                    relevantRecords,
+                    priceRecordCreateDto.Price);
+
+                return (closestRecord, float.Parse(priceChange.ToString("0.000")), athatl);
             }
-            else
+            finally
             {
-                // Find the closest price record after target time
-                closestRecord = filteredTimeSpanPriceRecords
-                    .OrderBy(pr => Math.Abs((pr.DateTime - targetTime).TotalSeconds)) // Find closest after targetTime
-                    .First();
+                semaphore.Release();
             }
-
-            // Extract the historical price and date
-            var historicPrice = closestRecord.Price;
-            var historicDateTime = closestRecord.DateTime; // Adding an hour as in the original function
-
-            // Calculate price change percentage
-            var priceChange = Math.Abs((priceRecordCreateDto.Price / historicPrice * 100) - 100);
-            Dictionary<string, bool> athatl = await CheckIfPriceWasATHorATL(timeFrame, asset, priceRecordCreateDto.Price);
-
-            return (closestRecord, float.Parse(priceChange.ToString("0.000")), athatl);
         }
 
-        public async Task<Dictionary<string, bool>> CheckIfPriceWasATHorATL(TimeSpan timeFrame, Asset asset, float currentPrice)
+
+        public async Task<Dictionary<string, bool>> CheckIfPriceWasATHorATL(TimeSpan timeFrame, List<float> allPriceRecords, float currentPrice)
         {
-            var targetTime = DateTime.Now - timeFrame;
-            var allPriceRecords = asset.PriceRecords
-                .Where(pr => pr.DateTime >= targetTime)
-                .ToList();
-
-            // If no records are found, return a default response
-            if (allPriceRecords.Count == 0)
-            {
-                return new Dictionary<string, bool>
-                {
-                    { "wasATH", false },
-                    { "wasATL", false }
-                };
-            }
-
-            float maxPrice = allPriceRecords.Select(pr => pr.Price).Max();
-            float minPrice = allPriceRecords.Select(pr => pr.Price).Min();
+            float maxPrice = allPriceRecords.Max();
+            float minPrice = allPriceRecords.Min();
 
             return new Dictionary<string, bool>
             {

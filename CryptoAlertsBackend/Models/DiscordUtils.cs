@@ -17,7 +17,6 @@ namespace CryptoAlertsBackend.Models
             public bool WentUp { get; set; } = false;
         }
 
-        private static readonly string DISCORD_WEBHOOK_NORMAL_ALERT_URL = Environment.GetEnvironmentVariable("DISCORD_WEBHOOK_NORMAL_ALERT_URL");
         private static readonly string DISCORD_WEBHOOK_2X_RATIO_URL = Environment.GetEnvironmentVariable("DISCORD_WEBHOOK_2X_RATIO_URL");
         private static readonly string DISCORD_WEBHOOK_3X_RATIO_URL = Environment.GetEnvironmentVariable("DISCORD_WEBHOOK_3X_RATIO_URL");
 
@@ -29,13 +28,13 @@ namespace CryptoAlertsBackend.Models
                     string formatToAdd = notification.Extra.WentUp ? "fix\n" : "\n";
                     string urlToSend = notification.Extra.RatioIfHigherPrice switch
                     {
-                        <= 2.0 => DISCORD_WEBHOOK_NORMAL_ALERT_URL,
                         > 2.0 and < 3.0 => DISCORD_WEBHOOK_2X_RATIO_URL,
                         >= 3.0 => DISCORD_WEBHOOK_3X_RATIO_URL,
-                        _ => throw new NotImplementedException()
+                        _ => ""
                     };
-                    new DiscordWebhookClient(urlToSend)
-                        .SendToDiscord(new DiscordMessage($"```{formatToAdd}{notification.NotificationText}```"));
+                    if(urlToSend != "")
+                        new DiscordWebhookClient(urlToSend)
+                            .SendToDiscord(new DiscordMessage($"```{formatToAdd}{notification.NotificationText}```"));
                     break;
                 // TODO other cases like volume fe
                 default:
