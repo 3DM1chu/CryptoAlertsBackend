@@ -5,7 +5,7 @@ namespace CryptoAlertsBackend.Models
 {
     public class AssetService(IServiceScopeFactory serviceScopeFactory)
     {
-        private static readonly SemaphoreSlim semaphore = new(60); // Limit to 64 concurrent tasks
+        //private static readonly SemaphoreSlim semaphore = new(48); // Limit to 48 concurrent tasks
 
         // Returns lastPrice and change % and athatl
         public async Task<(PriceRecord, float, Dictionary<string, bool>)> CheckIfPriceChangedAsync(
@@ -13,10 +13,10 @@ namespace CryptoAlertsBackend.Models
             PriceRecordCreateDto priceRecordCreateDto,
             TimeSpan timeFrame)
         {
-            await semaphore.WaitAsync();
+            //await semaphore.WaitAsync();
 
-            try
-            {
+            //try
+            //{
                 // Calculate target time based on the given time frame
                 var targetTime = DateTime.Now - timeFrame;
 
@@ -54,11 +54,11 @@ namespace CryptoAlertsBackend.Models
                     priceRecordCreateDto.Price);
 
                 return (closestRecord, float.Parse(priceChange.ToString("0.000")), athatl);
-            }
-            finally
-            {
-                semaphore.Release();
-            }
+            //}
+            //finally
+            //{
+                //semaphore.Release();
+            //}
         }
 
 

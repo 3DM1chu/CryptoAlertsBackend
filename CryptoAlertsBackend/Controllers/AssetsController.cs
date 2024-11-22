@@ -47,67 +47,62 @@ namespace CryptoAlertsBackend.Controllers
         [HttpPost("addPriceRecord")]
         public async Task<IActionResult> AddPriceRecordToAsset(PriceRecordCreateDto priceRecordCreateDto)
         {
-            try
+            var assetsFound = await context.Assets
+                .Where(asset => asset.Name == priceRecordCreateDto.AssetName).ToListAsync();
+
+            if (assetsFound is not List<Asset> { Count: > 0 })
+                return NotFound(priceRecordCreateDto);
+
+            Asset assetFound = assetsFound.First();
+
+            _ = Task.Run(async () =>
             {
-                var assetsFound = await context.Assets
-                    .Where(asset => asset.Name == priceRecordCreateDto.AssetName).ToListAsync();
-
-                if (assetsFound is not List<Asset> { Count: > 0 })
-                    return NotFound(priceRecordCreateDto);
-
-                Asset assetFound = assetsFound.First();
-
-                _ = Task.Run(async () =>
+                await Parallel.ForEachAsync(ChangeTimeframes, async (changeTimeframe, cancellationToken) =>
                 {
-                    foreach (var (minutes, minChange) in ChangeTimeframes)
-                    {
-                        (PriceRecord historyPriceRecord, float change, Dictionary<string, bool> athatl)
-                        =
+                    var (minutes, minChange) = changeTimeframe;
+
+                    (PriceRecord historyPriceRecord, float change, Dictionary<string, bool> athatl) =
                         await assetService.CheckIfPriceChangedAsync(assetFound, priceRecordCreateDto,
                             TimeSpan.FromMinutes(minutes));
-                        float currentPrice = priceRecordCreateDto.Price;
 
-                        if (currentPrice == historyPriceRecord.Price || historyPriceRecord.Price == 0 || change < minChange)
-                            continue;
+                    float currentPrice = priceRecordCreateDto.Price;
 
-                        string baseNotification = $"{assetFound.Name}\n{historyPriceRecord.Price} => {currentPrice}$\n{historyPriceRecord.DateTime} | {DateTime.Now}";
+                    if (currentPrice == historyPriceRecord.Price || historyPriceRecord.Price == 0 || change < minChange)
+                        return;
 
-                        Notification notificationToSend = new()
+                    string baseNotification = $"{assetFound.Name}\n{historyPriceRecord.Price} => {currentPrice}$\n{historyPriceRecord.DateTime} | {DateTime.Now}";
+
+                    Notification notificationToSend = new()
+                    {
+                        NotificationText = baseNotification,
+                        NotificationType = "price_change",
+                        Extra = new()
                         {
-                            NotificationText = baseNotification,
-                            NotificationType = "price_change",
-                            Extra = new()
-                            {
-                                RatioIfHigherPrice = (double)change / minChange,
-                                WentUp = true
-                            }
-                        };
-
-                        if (currentPrice > historyPriceRecord.Price && athatl["wasATH"])
-                        {
-                            notificationToSend.NotificationText = $"{baseNotification}\nATH in {minutes} minutes\n📗{change}%";
+                            RatioIfHigherPrice = (double)change / minChange,
+                            WentUp = true
                         }
-                        else if (currentPrice < historyPriceRecord.Price && athatl["wasATL"])
-                        {
-                            notificationToSend.NotificationText = $"{baseNotification}\nATL in {minutes} minutes\n📗 {change}%";
-                            notificationToSend.Extra.WentUp = false;
-                        }
+                    };
 
-                        if (athatl["wasATL"] || athatl["wasATH"])
-                        {
-                            DiscordUtils.SendNotification(notificationToSend);
-                        }
-
+                    if (currentPrice > historyPriceRecord.Price && athatl["wasATH"])
+                    {
+                        notificationToSend.NotificationText = $"{baseNotification}\nATH in {minutes} minutes\n📗{change}%";
+                    }
+                    else if (currentPrice < historyPriceRecord.Price && athatl["wasATL"])
+                    {
+                        notificationToSend.NotificationText = $"{baseNotification}\nATL in {minutes} minutes\n📗 {change}%";
+                        notificationToSend.Extra.WentUp = false;
                     }
 
-                    await assetService.SavePriceRecordToDatabase(priceRecordCreateDto, assetFound.Id);
+                    if (athatl["wasATL"] || athatl["wasATH"])
+                    {
+                        DiscordUtils.SendNotification(notificationToSend);
+                    }
                 });
-                return Ok(priceRecordCreateDto);
-            }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+
+                await assetService.SavePriceRecordToDatabase(priceRecordCreateDto, assetFound.Id);
+            });
+
+            return Ok(priceRecordCreateDto);
         }
     }
 }

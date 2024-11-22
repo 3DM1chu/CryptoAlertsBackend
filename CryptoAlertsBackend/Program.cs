@@ -1,4 +1,6 @@
+using CryptoAlertsBackend.Middlewares;
 using CryptoAlertsBackend.Models;
+using CryptoAlertsBackend.Workers;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -57,6 +59,13 @@ builder.Services.AddCors(options =>
 });*/
 
 builder.Services.AddScoped<AssetService>();
+builder.Services.AddHostedService<CleanerService>();
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxConcurrentConnections = 1000; // Adjust as needed
+    options.Limits.MaxConcurrentUpgradedConnections = 1000; // For WebSockets
+    options.Limits.MaxRequestBodySize = 10 * 1024; // Optional: Set max request body size (in bytes)
+});
 
 var app = builder.Build();
 
@@ -67,6 +76,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Middleware
+app.UseMiddleware<TokenAuthHeaderMiddleware>();
 app.UseCors("AllowAll");
 
 // Important: Register routes defined by controllers
@@ -81,5 +91,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception) { }
 }
+
+ThreadPool.SetMinThreads(workerThreads: 200, completionPortThreads: 200);
 
 app.Run();
