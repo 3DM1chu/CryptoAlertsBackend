@@ -8,43 +8,27 @@ namespace CryptoAlertsBackend.Models
         //private static readonly SemaphoreSlim semaphore = new(48); // Limit to 48 concurrent tasks
 
         // Returns lastPrice and change % and athatl
-        public async Task<(PriceRecord, float, Dictionary<string, bool>)> CheckIfPriceChangedAsync(
-            Asset asset,
+        public (PriceRecord, float, Dictionary<string, bool>) CheckIfPriceChanged(
+            List<PriceRecord> priceRecords,
             PriceRecordCreateDto priceRecordCreateDto,
-            TimeSpan timeFrame)
+            TimeSpan timeFrame,
+            DateTime currentTime)
         {
-            var targetTime = DateTime.Now - timeFrame;
-
-            using var scope = serviceScopeFactory.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<EndpointContext>();
+            var targetTime = currentTime - timeFrame;
 
             // Fetch the closest record directly from the database
-            var closestRecord = await context.PriceRecords
-                .AsNoTracking()
-                .Where(pr => pr.AssetId == asset.Id && pr.DateTime >= targetTime) // Filter to relevant records
+            var relevantRecords = priceRecords
                 .OrderBy(pr => Math.Abs(EF.Functions.DateDiffSecond(targetTime, pr.DateTime))) // Sort by closest to targetTime
-                .Select(pr => new PriceRecord { Price = pr.Price, DateTime = pr.DateTime }) // Fetch full PriceRecord
-                .FirstOrDefaultAsync(); // Get the closest record
-
-            if (closestRecord == null)
+                .ToList();
+            if (relevantRecords == null || relevantRecords.Count == 0)
                 return (new PriceRecord(), 0.0f, []);
 
-            // Extract the historical price
-            var historicPrice = closestRecord.Price;
-
-            // Calculate price change percentage
-            var priceChange = Math.Abs((priceRecordCreateDto.Price / historicPrice * 100) - 100);
-
-            // Fetch relevant records for ATH/ATL check, minimizing data
-            var relevantRecords = await context.PriceRecords
-                .AsNoTracking()
-                .Where(pr => pr.AssetId == asset.Id && pr.DateTime >= targetTime)
-                .Select(pr => pr.Price) // Fetch only prices
-                .ToListAsync();
+            PriceRecord closestRecord = relevantRecords.First();
+            float historicPrice = closestRecord.Price;
+            float priceChange = Math.Abs((priceRecordCreateDto.Price / historicPrice * 100) - 100);
 
             // Compute ATH/ATL using the fetched records
             Dictionary<string, bool> athatl = CheckIfPriceWasATHorATL(
-                timeFrame,
                 relevantRecords,
                 priceRecordCreateDto.Price);
 
@@ -52,10 +36,10 @@ namespace CryptoAlertsBackend.Models
         }
 
 
-        public Dictionary<string, bool> CheckIfPriceWasATHorATL(TimeSpan timeFrame, List<float> allPriceRecords, float currentPrice)
+        public Dictionary<string, bool> CheckIfPriceWasATHorATL(List<PriceRecord> allPriceRecords, float currentPrice)
         {
-            float maxPrice = allPriceRecords.Max();
-            float minPrice = allPriceRecords.Min();
+            float maxPrice = allPriceRecords.Select(pr => pr.Price).Max();
+            float minPrice = allPriceRecords.Select(pr => pr.Price).Min();
 
             return new Dictionary<string, bool>
             {
@@ -63,12 +47,12 @@ namespace CryptoAlertsBackend.Models
                 { "wasATL", currentPrice < minPrice }
             };
         }
-        public async Task SavePriceRecordToDatabase(PriceRecordCreateDto priceRecordCreateDto, int assetId)
+        public async Task SavePriceRecordToDatabase(float price, DateTime currentTime, int assetId)
         {
             PriceRecord priceRecord = new()
             {
-                DateTime = priceRecordCreateDto.DateTime,
-                Price = priceRecordCreateDto.Price,
+                DateTime = currentTime,
+                Price = price,
                 AssetId = assetId
             };
 
@@ -77,6 +61,28 @@ namespace CryptoAlertsBackend.Models
             var context = scope.ServiceProvider.GetRequiredService<EndpointContext>();
             context.PriceRecords.Add(priceRecord);
             await context.SaveChangesAsync();
+        }
+
+        // 1 minute, 5 minutes, 15 minutes, 30 minutes, 60 minutes, 240 minutes, 480 minutes, 1440 minutes
+        public async Task<List<PriceRecord>> GetRelevantRecords(int assetId, int interval,
+            DateTime currentTime, int timestampMinutesThreshold)
+        {
+            using var scope = serviceScopeFactory.CreateScope();
+            var _context = scope.ServiceProvider.GetRequiredService<EndpointContext>();
+            var returnDict = new List<PriceRecord>();
+
+            // Calculate the target time and bounds
+            DateTime targetTime = currentTime.AddMinutes(-interval);
+            DateTime lowerBound = targetTime.AddMinutes(-timestampMinutesThreshold);
+            DateTime upperBound = targetTime.AddMinutes(timestampMinutesThreshold);
+
+            // Query records within the threshold for this interval
+            return await _context.PriceRecords
+                .Include(pr => pr.Asset) // Remove this if Asset data is unnecessary
+                .Where(x=>x.AssetId == assetId && x.DateTime >= lowerBound && x.DateTime <= upperBound)
+                .OrderBy(x => x.DateTime)
+                .AsNoTracking() // Improve read-only performance
+                .ToListAsync();
         }
     }
 }

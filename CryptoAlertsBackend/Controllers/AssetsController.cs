@@ -3,6 +3,10 @@ using CryptoAlertsBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using static CryptoAlertsBackend.Models.DiscordUtils;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.Extensions.DependencyInjection;
+using MySql.EntityFrameworkCore.Extensions;
+using NuGet.ContentModel;
+using Asset = CryptoAlertsBackend.Models.Asset;
 
 namespace CryptoAlertsBackend.Controllers
 {
@@ -30,7 +34,7 @@ namespace CryptoAlertsBackend.Controllers
 
         class Checks(int secs, float minChange)
         {
-            public int SecondsOfDelay { get; set; } = secs;
+            public int MSSecondsOfDelay { get; set; } = secs;
             public float MinimumPriceChange { get; set; } = minChange;
         }
 
@@ -71,25 +75,26 @@ namespace CryptoAlertsBackend.Controllers
 
             if (assetsFound is not List<Asset> { Count: > 0 })
                 return NotFound(priceRecordCreateDto);
-
             Asset assetFound = assetsFound.First();
 
             _ = Task.Run(async () =>
             {
-                await Parallel.ForEachAsync(ChangeTimeframes, async (changeChecksTimeframe, cancellationToken) =>
-                {
+                // Fetch the closest record directly from the database
+                DateTime currentTime = DateTime.Now;
+
+                foreach (KeyValuePair<int, Checks> changeChecksTimeframe in ChangeTimeframes) {
                     var (minutes, check) = changeChecksTimeframe;
                     try
                     {
                         assetFound.LastTimeCheckedPrices.TryGetValue(minutes, out DateTime lastTimeChecked);
-                        if(DateTime.Now - lastTimeChecked < TimeSpan.FromMilliseconds(check.SecondsOfDelay * 1000))
+                        if (currentTime - lastTimeChecked < TimeSpan.FromMilliseconds(check.MSSecondsOfDelay))
                         {
                             // Not "allowed" to check yet, since we really dont need to check for example 24h price every second
-                            return;
+                            continue;
                         }
                         else
                         {
-                            assetFound.LastTimeCheckedPrices[minutes] = DateTime.Now;
+                            assetFound.LastTimeCheckedPrices[minutes] = currentTime;
                         }
                     }
                     catch (Exception)
@@ -98,16 +103,18 @@ namespace CryptoAlertsBackend.Controllers
                         // continue
                     }
 
+                    List<PriceRecord> relevantRecords = await assetService.GetRelevantRecords(assetFound.Id, minutes, currentTime, 3);
+
                     (PriceRecord historyPriceRecord, float change, Dictionary<string, bool> athatl) =
-                        await assetService.CheckIfPriceChangedAsync(assetFound, priceRecordCreateDto,
-                            TimeSpan.FromMinutes(minutes));
+                        assetService.CheckIfPriceChanged(relevantRecords, priceRecordCreateDto,
+                            TimeSpan.FromMinutes(minutes), currentTime);
 
                     float currentPrice = priceRecordCreateDto.Price;
 
                     if (currentPrice == historyPriceRecord.Price || historyPriceRecord.Price == 0 || change < check.MinimumPriceChange)
-                        return;
+                        continue;
 
-                    string baseNotification = $"{assetFound.Name}\n{historyPriceRecord.Price} => {currentPrice}$\n{historyPriceRecord.DateTime} | {DateTime.Now}";
+                    string baseNotification = $"{assetFound.Name}\n{historyPriceRecord.Price} => {currentPrice}$\n{historyPriceRecord.DateTime.AddHours(1)} | {currentTime.AddHours(1)}";
 
                     Notification notificationToSend = new()
                     {
@@ -131,12 +138,10 @@ namespace CryptoAlertsBackend.Controllers
                     }
 
                     if (athatl["wasATL"] || athatl["wasATH"])
-                    {
                         DiscordUtils.SendNotification(notificationToSend);
-                    }
-                });
+                }
 
-                await assetService.SavePriceRecordToDatabase(priceRecordCreateDto, assetFound.Id);
+                await assetService.SavePriceRecordToDatabase(priceRecordCreateDto.Price, currentTime, assetFound.Id);
             });
 
             return Ok(priceRecordCreateDto);
